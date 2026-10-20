@@ -117,7 +117,15 @@ export default function AdminResourcesPage() {
   );
 }
 
-function ResourceFormModal({ isOpen, onClose, onSuccess }) {
+function ResourceFormModal({
+  isOpen,
+  onClose,
+  onSuccess
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
   const supabase = createClient();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -130,7 +138,7 @@ function ResourceFormModal({ isOpen, onClose, onSuccess }) {
     approval_status: 'draft',
   });
 
-  async function handleSubmit(e) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
 

@@ -18,7 +18,7 @@ export async function initOfflineDB() {
   });
 }
 
-export async function queueOperation(operation) {
+export async function queueOperation(operation: { id?: string, entityType: string, payload: any, userId: string }) {
   const db = await initOfflineDB();
   const item = {
     id: operation.id || crypto.randomUUID(),
@@ -39,7 +39,7 @@ export async function getQueuedOperations() {
   return await db.getAllFromIndex(STORE_NAME, 'status', 'pending');
 }
 
-export async function updateOperationStatus(id, status, error = null) {
+export async function updateOperationStatus(id: string, status: string, error: string | null = null) {
   const db = await initOfflineDB();
   const item = await db.get(STORE_NAME, id);
   if (!item) return;
@@ -53,12 +53,12 @@ export async function updateOperationStatus(id, status, error = null) {
   await db.put(STORE_NAME, updatedItem);
 }
 
-export async function removeOperation(id) {
+export async function removeOperation(id: string) {
   const db = await initOfflineDB();
   await db.delete(STORE_NAME, id);
 }
 
-export async function clearUserQueue(userId) {
+export async function clearUserQueue(userId: string) {
   const db = await initOfflineDB();
   const all = await db.getAll(STORE_NAME);
   const toDelete = all.filter(item => item.userId === userId);

@@ -45,8 +45,8 @@ export default function DistributionsPage() {
     d.profiles?.full_name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const getStatusBadge = (status) => {
-    const styles = {
+  const getStatusBadge = (status: string) => {
+    const styles: Record<string, string> = {
       draft: 'bg-gray-100 text-gray-600',
       approved: 'bg-blue-100 text-blue-600',
       dispatched: 'bg-yellow-100 text-yellow-600',
@@ -184,7 +184,7 @@ function DistributionFormModal({
     }
   }, [isOpen]);
 
-  async function handleSubmit(e) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
 

@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/client';
 
 export default function PublicResourcesPage() {
   const supabase = createClient();
-  const [resources, setResources] = useState([]);
+  const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -117,6 +117,6 @@ export default function PublicResourcesPage() {
   );
 }
 
-function ArrowRight({ size }) {
+function ArrowRight({ size }: { size: number }) {
   return <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 18 19 12 12 6"></polyline></svg>;
 }

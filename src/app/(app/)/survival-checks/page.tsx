@@ -13,7 +13,7 @@ import { syncOfflineQueue } from '@/lib/offline/sync';
 
 export default function SurvivalChecksPage() {
   const supabase = createClient();
-  const [checks, setChecks] = useState([]);
+  const [checks, setChecks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -212,7 +212,19 @@ export default function SurvivalChecksPage() {
   );
 }
 
-function SurvivalFormModal({ isOpen, onClose, onSuccess, isOnline, onQueueSuccess }) {
+function SurvivalFormModal({
+  isOpen,
+  onClose,
+  onSuccess,
+  isOnline,
+  onQueueSuccess
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+  isOnline: boolean;
+  onQueueSucceeded: () => void;
+}) {
   const supabase = createClient();
   const [loading, setLoading] = useState(false);
   const [events, setEvents] = useState([]);

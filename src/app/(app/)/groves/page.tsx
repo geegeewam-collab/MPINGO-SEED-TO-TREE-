@@ -9,7 +9,7 @@ import { createClient } from '@/lib/supabase/client';
 
 export default function GrovesPage() {
   const supabase = createClient();
-  const [groves, setGroves] = useState([]);
+  const [groves, setGroves] = useState<Grove[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -91,10 +91,18 @@ export default function GrovesPage() {
   );
 }
 
-function GroveFormModal({ isOpen, onClose, onSuccess }) {
+function GroveFormModal({
+  isOpen,
+  onClose,
+  onSuccess
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
   const supabase = createClient();
   const [loading, setLoading] = useState(false);
-  const [sites, setSites] = useState([]);
+  const [sites, setSites] = useState<PlantingSite[]>([]);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -114,7 +122,7 @@ function GroveFormModal({ isOpen, onClose, onSuccess }) {
     }
   }, [isOpen]);
 
-  async function handleSubmit(e) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
 

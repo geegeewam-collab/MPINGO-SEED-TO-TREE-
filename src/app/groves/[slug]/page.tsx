@@ -6,11 +6,13 @@ import { Globe, TreePine, Calendar, CheckCircle2, MapPin, Image as ImageIcon } f
 import { createClient } from '@/lib/supabase/client';
 import { calculateSurvivalMetrics } from '@/lib/calculations/survival';
 
-export default function PublicGrovePage({ params }) {
+import { Grove, GroveUpdate, PlantingSite } from '@/types';
+
+export default function PublicGrovePage({ params }: { params: { slug: string } }) {
   const supabase = createClient();
-  const [grove, setGrove] = useState(null);
-  const [metrics, setMetrics] = useState(null);
-  const [updates, setUpdates] = useState([]);
+  const [grove, setGrove] = useState<Grove | null>(null);
+  const [metrics, setMetrics] = useState<any>(null);
+  const [updates, setUpdates] = useState<GroveUpdate[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -22,8 +24,7 @@ export default function PublicGrovePage({ params }) {
         .from('groves')
         .select(`
           *,
-          planting_sites(*),
-          primary_planting_event_id:primary_planting_event_id
+          planting_sites(*)
         `)
         .eq('slug', params.slug)
         .single();
@@ -130,11 +131,11 @@ export default function PublicGrovePage({ params }) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="text-xs font-bold text-[#68736B] uppercase block mb-1">Location</label>
-                  <p className="text-[#242C27] font-medium">{grove.planting_sites?.general_location || 'Not specified'}</p>
+                  <p className="text-[#242C27] font-medium">{(grove as any).planting_sites?.general_location || 'Not specified'}</p>
                 </div>
                 <div>
                   <label className="text-xs font-bold text-[#68736B] uppercase block mb-1">Region</label>
-                  <p className="text-[#242C27] font-medium">{grove.planting_sites?.county || 'Tanzania'}</p>
+                  <p className="text-[#242C27] font-medium">{(grove as any).planting_sites?.county || 'Tanzania'}</p>
                 </div>
               </div>
             </section>
@@ -190,7 +191,7 @@ export default function PublicGrovePage({ params }) {
   );
 }
 
-function StatCard({ icon, label, value, subtext }) {
+function StatCard({ icon, label, value, subtext }: { icon: React.ReactNode; label: string; value: string; subtext: string }) {
   return (
     <Card className="p-6 bg-white border-[#E0E5DE] rounded-2xl shadow-sm">
       <div className="flex items-center gap-3 mb-4">

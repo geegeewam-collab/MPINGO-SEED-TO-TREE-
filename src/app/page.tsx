@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
-import { TreePine, Globe, Users, Package, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { TreePine, Globe, Users, Package, ArrowRight, CheckCircle2, MapPin } from 'lucide-react';
 import Link from 'next/link';
 
 export default function LandingPage() {
@@ -117,7 +117,7 @@ export default function LandingPage() {
   );
 }
 
-function WorkflowStep({ number, title, desc, icon }) {
+function WorkflowStep({ number, title, desc, icon }: { number: string; title: string; desc: string; icon: React.ReactNode }) {
   return (
     <div className="relative p-6 bg-[#F7F7F1] rounded-2xl border border-[#E0E5DE] space-y-4 group hover:bg-white transition-all hover:shadow-sm">
       <div className="flex justify-between items-start">
