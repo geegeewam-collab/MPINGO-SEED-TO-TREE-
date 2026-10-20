@@ -9,14 +9,19 @@ import { calculateSurvivalMetrics } from '@/lib/calculations/survival';
 import { Grove, GroveUpdate, PlantingSite } from '@/types';
 
 export default function PublicGrovePage({ params }: { params: { slug: string } }) {
-  const supabase = createClient();
+  const [supabase, setSupabase] = useState<any>(null);
   const [grove, setGrove] = useState<Grove | null>(null);
   const [metrics, setMetrics] = useState<any>(null);
   const [updates, setUpdates] = useState<GroveUpdate[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setSupabase(createClient());
+  }, []);
+
+  useEffect(() => {
     async function loadGroveData() {
+      if (!supabase) return;
       setLoading(true);
 
       // 1. Fetch the grove and its associated site/event

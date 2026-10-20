@@ -7,12 +7,17 @@ import { BookOpen, FileText, Video, ExternalLink, Search, Globe } from 'lucide-r
 import { createClient } from '@/lib/supabase/client';
 
 export default function PublicResourcesPage() {
-  const supabase = createClient();
-  const [resources, setResources] = useState<Resource[]>([]);
+  const [supabase, setSupabase] = useState<any>(null);
+  const [resources, setResources] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
+  useEffect(() => {
+    setSupabase(createClient());
+  }, []);
+
   async function fetchResources() {
+    if (!supabase) return;
     setLoading(true);
     const { data, error } = await supabase
       .from('resources')
@@ -29,15 +34,17 @@ export default function PublicResourcesPage() {
   }
 
   useEffect(() => {
-    fetchResources();
-  }, []);
+    if (supabase) {
+      fetchResources();
+    }
+  }, [supabase]);
 
-  const filteredResources = resources.filter(r =>
+  const filteredResources = resources.filter((r: any) =>
     r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     r.category?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const getTypeIcon = (type) => {
+  const getTypeIcon = (type: any) => {
     switch (type) {
       case 'pdf': return <FileText size={18} className="text-red-500" />;
       case 'video': return <Video size={18} className="text-blue-500" />;
