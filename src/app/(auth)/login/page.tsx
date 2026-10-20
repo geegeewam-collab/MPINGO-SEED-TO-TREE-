@@ -22,7 +22,6 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
-  const supabase = createClient();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,6 +33,8 @@ export default function LoginPage() {
     setIsLoading(true);
     setError(null);
     try {
+      // Create the client on submit (browser only), never during render/prerender
+      const supabase = createClient();
       const { error: authError } = await supabase.auth.signInWithPassword({
         email: values.email,
         password: values.password,
@@ -41,7 +42,7 @@ export default function LoginPage() {
 
       if (authError) throw authError;
       
-      router.push('/app/dashboard');
+      router.push('/dashboard');
       router.refresh();
     } catch (err: any) {
       setError(err.message || "An unexpected error occurred. Please try again.");

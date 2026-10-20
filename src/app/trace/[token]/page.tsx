@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/Button';
 import { Package, CheckCircle2, MapPin, Calendar } from 'lucide-react';
 import { notFound } from 'next/navigation';
 
+export const instant = false;
 
-export default async function PublicTracePage({ params }: { params: { token: string } }) {
+export default async function PublicTracePage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
   const supabase = await createClient();
 

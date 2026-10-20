@@ -23,7 +23,7 @@ export default async function DashboardPage() {
   // Verify session
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
-    redirect('/auth/login');
+    redirect('/login');
   }
 
   // Fetch profile to check role
