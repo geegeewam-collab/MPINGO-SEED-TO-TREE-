@@ -1,68 +1,50 @@
 "use client";
-import React from 'react';
-import {
-  Wifi,
-  WifiOff,
-  User,
-  ChevronRight,
-  Bell,
-  Search
-} from 'lucide-react';
+import { useSyncExternalStore } from 'react';
+import { usePathname } from 'next/navigation';
+import { Menu, Wifi, WifiOff, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { locate } from './nav';
 
-export function Header() {
-  // Mock state for connection status
-  const isOnline = true;
+function subscribe(cb: () => void) {
+  window.addEventListener('online', cb);
+  window.addEventListener('offline', cb);
+  return () => { window.removeEventListener('online', cb); window.removeEventListener('offline', cb); };
+}
+
+interface HeaderProps { name: string; role: string; onMenu: () => void; onCollapse: () => void }
+
+export function Header({ name, role, onMenu, onCollapse }: HeaderProps) {
+  const online = useSyncExternalStore(subscribe, () => navigator.onLine, () => true);
+  const here = locate(usePathname());
 
   return (
-    <header className="h-16 border-b bg-background sticky top-0 z-30 flex items-center justify-between px-6">
-      <div className="flex items-center gap-4">
-        {/* Breadcrumbs / Title */}
-        <div className="flex items-center text-sm text-muted-foreground">
-          <span className="hover:text-foreground cursor-pointer transition-colors">App</span>
-          <ChevronRight size={14} className="mx-2" />
-          <span className="text-foreground font-medium">Dashboard</span>
-        </div>
+    <header className="sticky top-0 z-20 flex h-16 items-center justify-between gap-4 border-b bg-background/80 px-4 backdrop-blur-md sm:px-6 lg:px-8">
+      <div className="flex min-w-0 items-center gap-3">
+        <button onClick={onMenu} className="rounded-md p-2 text-muted-foreground hover:bg-accent lg:hidden" aria-label="Open menu"><Menu size={20} /></button>
+        <button onClick={onCollapse} className="hidden rounded-md p-2 text-muted-foreground hover:bg-accent lg:block" aria-label="Collapse or expand navigation"><Menu size={18} /></button>
+        {here && (
+          <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-1.5 text-sm text-muted-foreground">
+            <span className="hidden sm:inline">{here.group}</span>
+            <ChevronRight size={14} className="hidden sm:inline" />
+            <span className="truncate font-medium text-foreground">{here.title}</span>
+          </nav>
+        )}
       </div>
-
-      <div className="flex items-center gap-4">
-        {/* Search (Optional but common in shells) */}
-        <div className="hidden md:flex items-center relative">
-          <Search size={16} className="absolute left-3 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Search..."
-            className="pl-9 pr-4 py-1.5 text-sm border rounded-md bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/20 w-64"
-          />
+      <div className="flex items-center gap-3">
+        <span
+          role="status"
+          className={cn('flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium', online ? 'bg-success/10 text-success' : 'bg-warning/15 text-warning')}
+        >
+          {online ? <Wifi size={12} /> : <WifiOff size={12} />}
+          {online ? 'Online' : 'Offline'}
+        </span>
+        <div className="hidden text-right sm:block">
+          <p className="text-sm font-medium leading-none">{name}</p>
+          <p className="mt-1 text-xs capitalize text-muted-foreground">{role.replace('_', ' ')}</p>
         </div>
-
-        {/* Connection Status */}
-        <div className={cn(
-          "flex items-center gap-2 px-2 py-1 rounded-full text-xs font-medium transition-colors",
-          isOnline
-            ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-            : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-        )}>
-          {isOnline ? <Wifi size={12} /> : <WifiOff size={12} />}
-          <span>{isOnline ? 'Online' : 'Offline'}</span>
-        </div>
-
-        {/* Notifications */}
-        <button className="p-2 text-muted-foreground hover:text-foreground relative">
-          <Bell size={20} />
-          <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full border-2 border-background" />
-        </button>
-
-        {/* User Profile */}
-        <div className="flex items-center gap-3 pl-4 border-l">
-          <div className="text-right hidden sm:block">
-            <p className="text-sm font-medium leading-none">Admin User</p>
-            <p className="text-xs text-muted-foreground mt-1">Network Admin</p>
-          </div>
-          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-primary/20 cursor-pointer hover:bg-primary/20 transition-colors">
-            <User size={18} />
-          </div>
-        </div>
+        <form action="/auth/signout" method="post">
+          <button type="submit" className="rounded-lg border px-3 py-1.5 text-sm font-medium hover:bg-accent">Sign out</button>
+        </form>
       </div>
     </header>
   );

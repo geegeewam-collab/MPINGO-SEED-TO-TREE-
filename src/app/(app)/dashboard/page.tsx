@@ -1,143 +1,92 @@
-import React from 'react';
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
-import { Button } from '@/components/ui/Button';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
-import { Table, TableHeader, TableBody, TableRow, TableCell, TableHead } from '@/components/ui/Table';
-import {
-  TreeDeciduous,
-  Package,
-  Truck,
-  CheckCircle2,
-  Users,
-  AlertCircle,
-  Factory,
-  FileText
-} from 'lucide-react';
-import { redirect } from 'next/navigation';
+import { countRows, sumColumn, fmtNum } from '@/lib/queries';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { StatusBadge } from '@/components/ui/StatusBadge';
+import { EmptyState } from '@/components/ui/EmptyState';
 
-export const instant = false;
+interface RecentCheck { id: string; reference: string | null; inspection_date: string | null; submission_status: string }
 
 export default async function DashboardPage() {
-  const supabase = await createClient();
+  const sb = await createClient();
+  const { data: { user } } = await sb.auth.getUser();
+  const { data: profile } = await sb.from('profiles').select('full_name').eq('id', user?.id ?? '').single();
 
-  // Verify session
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    redirect('/login');
-  }
+  const [lots, stock, dist, events, planted, verified, submitted, requests, apps, recent] = await Promise.all([
+    countRows(sb, 'seed_lots'),
+    sumColumn(sb, 'nursery_batches', 'current_stock'),
+    countRows(sb, 'distributions'),
+    countRows(sb, 'planting_events'),
+    sumColumn(sb, 'planting_events', 'quantity_planted'),
+    countRows(sb, 'survival_checks', ['submission_status', 'verified']),
+    countRows(sb, 'survival_checks', ['submission_status', 'submitted']),
+    countRows(sb, 'seed_requests'),
+    countRows(sb, 'member_applications'),
+    sb.from('survival_checks').select('id, reference, inspection_date, submission_status').order('created_at', { ascending: false }).limit(6),
+  ]);
+  const recentRows = (recent.data ?? []) as unknown as RecentCheck[];
 
-  // Fetch profile to check role
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single();
-
-  if (!profile) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full text-center">
-        <AlertCircle size={48} className="text-muted-foreground mb-4" />
-        <h2 className="text-xl font-bold">Profile initializing...</h2>
-        <p className="text-muted-foreground">Please refresh the page in a few seconds.</p>
-      </div>
-    );
-  }
-
-  const stats = [
-    { label: 'Active Seed Lots', value: '12', icon: Package, color: 'text-blue-600' },
-    { label: 'Nursery Stock', value: '4,500', icon: Factory, color: 'text-green-600' },
-    { label: 'Pending Requests', value: '8', icon: FileText, color: 'text-amber-600' },
-    { label: 'Planting Cohorts', value: '24', icon: TreeDeciduous, color: 'text-emerald-600' },
+  const journey = [
+    { label: 'Seed lots', value: fmtNum(lots), sub: 'collected', href: '/provenance/seed-lots' },
+    { label: 'Seedlings in stock', value: fmtNum(stock), sub: 'across all batches', href: '/production/batches' },
+    { label: 'Distributions', value: fmtNum(dist), sub: 'recorded', href: '/production/distributions' },
+    { label: 'Trees planted', value: fmtNum(planted), sub: `${fmtNum(events)} planting events`, href: '/restoration/events' },
+    { label: 'Verified checks', value: fmtNum(verified), sub: 'survival inspections', href: '/restoration/survival' },
   ];
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Welcome, {profile.full_name || 'Operator'}</h1>
-        <p className="text-muted-foreground">
-          Role: <span className="capitalize font-medium text-foreground">{profile.role}</span> •
-          Status: <span className="capitalize font-medium text-foreground">{profile.status}</span>
+      <PageHeader title={`Welcome${profile?.full_name ? `, ${profile.full_name}` : ''}`} description="Restoration operations at a glance. Every figure comes from live records; a dash means the figure could not be loaded." />
+
+      <section aria-labelledby="attn" className="rounded-xl border bg-surface p-5">
+        <h2 id="attn" className="text-base font-semibold">Needs attention</h2>
+        {submitted && submitted > 0 ? (
+          <Link href="/restoration/survival" className="mt-3 flex items-center justify-between rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm font-medium hover:bg-warning/15">
+            <span>{submitted} survival {submitted === 1 ? 'check is' : 'checks are'} waiting for verification</span>
+            <span className="text-warning">Review</span>
+          </Link>
+        ) : (
+          <p className="mt-2 text-sm text-muted-foreground">{submitted === null ? 'The verification queue could not be loaded.' : 'No survival checks are waiting for verification.'}</p>
+        )}
+        <p className="mt-3 text-xs text-muted-foreground">
+          On file: <Link className="underline" href="/network/requests">{fmtNum(requests)} seed requests</Link> and <Link className="underline" href="/management/members">{fmtNum(apps)} membership applications</Link>.
         </p>
-      </div>
+      </section>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat, i) => (
-          <Card key={i}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{stat.label}</CardTitle>
-              <stat.icon className={`h-4 w-4 ${stat.color}`} />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <section aria-labelledby="chain">
+        <h2 id="chain" className="mb-3 text-base font-semibold">The restoration chain</h2>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          {journey.map((j) => (
+            <Link key={j.label} href={j.href} className="rounded-xl border bg-surface p-4 transition-colors hover:border-primary/50 hover:bg-muted/50">
+              <p className="text-sm text-muted-foreground">{j.label}</p>
+              <p className="mt-1 text-2xl font-semibold">{j.value}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{j.sub}</p>
+            </Link>
+          ))}
+        </div>
+      </section>
 
-      <div className="grid gap-4 md:grid-cols-7">
-        <Card className="md:col-span-4">
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Activity</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead className="text-right">Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <TableRow>
-                  <TableCell className="font-medium">Seed Lot SL-2026-001 Collected</TableCell>
-                  <TableCell>Oct 18, 2026</TableCell>
-                  <TableCell className="text-right">
-                    <span className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-700">Approved</span>
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Distribution DIS-442 Dispatched</TableCell>
-                  <TableCell>Oct 19, 2026</TableCell>
-                  <TableCell className="text-right">
-                    <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-700">In Transit</span>
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Survival Check SC-102 Submitted</TableCell>
-                  <TableCell>Oct 20, 2026</TableCell>
-                  <TableCell className="text-right">
-                    <span className="px-2 py-1 rounded-full text-xs bg-amber-100 text-amber-700">Pending</span>
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-
-        <Card className="md:col-span-3">
-          <CardHeader>
-            <CardTitle>Priority Tasks</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-start gap-3 p-3 rounded-lg border bg-muted/30">
-              <AlertCircle size={18} className="text-amber-600 mt-0.5" />
-              <div>
-                <p className="text-sm font-medium">Review 3 Seed Requests</p>
-                <p className="text-xs text-muted-foreground">Due by tomorrow</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 rounded-lg border bg-muted/30">
-              <AlertCircle size={18} className="text-amber-600 mt-0.5" />
-              <div>
-                <p className="text-sm font-medium">Verify 2 Survival Checks</p>
-                <p className="text-xs text-muted-foreground">Site: Kilombero Valley</p>
-              </div>
-            </div>
-            <Button className="w-full" variant="secondary">View All Tasks</Button>
-          </CardContent>
-        </Card>
-      </div>
+      <section aria-labelledby="recent">
+        <h2 id="recent" className="mb-3 text-base font-semibold">Latest survival checks</h2>
+        {recentRows.length === 0 ? (
+          <EmptyState title="No survival checks yet" body="Checks appear here once field inspections are recorded." />
+        ) : (
+          <div className="overflow-x-auto rounded-xl border bg-surface">
+            <table className="w-full text-sm">
+              <thead className="bg-sage/50 text-left text-muted-foreground"><tr>
+                <th scope="col" className="px-4 py-3 font-medium">Reference</th><th scope="col" className="px-4 py-3 font-medium">Inspected</th><th scope="col" className="px-4 py-3 font-medium">Status</th>
+              </tr></thead>
+              <tbody className="divide-y">
+                {recentRows.map((r) => (
+                  <tr key={r.id}><td className="px-4 py-3">{r.reference || '—'}</td><td className="px-4 py-3">{r.inspection_date || '—'}</td><td className="px-4 py-3"><StatusBadge value={r.submission_status} /></td></tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
     </div>
   );
 }
+
+export const instant = false;

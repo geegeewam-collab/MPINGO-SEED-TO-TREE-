@@ -1,133 +1,71 @@
 "use client";
-import React, { useState } from 'react';
-import {
-  LayoutDashboard,
-  FileText,
-  TreeDeciduous,
-  Package,
-  Factory,
-  Truck,
-  Map,
-  Calendar,
-  CheckCircle2,
-  Users,
-  UserCog,
-  ClipboardList,
-  Settings,
-  BookOpen,
-  Menu,
-  X
-} from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { navigation } from './nav';
 
-interface NavItem {
-  title: string;
-  href: string;
-  icon: React.ElementType;
-}
+interface SidebarProps { role: string; collapsed: boolean; open: boolean; onClose: () => void }
 
-interface NavGroup {
-  group: string;
-  items: NavItem[];
-}
-
-const navigation: NavGroup[] = [
-  {
-    group: 'General',
-    items: [
-      { title: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-      { title: 'Reports', href: '/reports', icon: FileText },
-    ],
-  },
-  {
-    group: 'Provenance',
-    items: [
-      { title: 'Mother Trees', href: '/provenance/mother-trees', icon: TreeDeciduous },
-      { title: 'Seed Lots', href: '/provenance/seed-lots', icon: Package },
-    ],
-  },
-  {
-    group: 'Production',
-    items: [
-      { title: 'Nurseries', href: '/production/nurseries', icon: Factory },
-      { title: 'Nursery Batches', href: '/production/batches', icon: Package },
-      { title: 'Distributions', href: '/production/distributions', icon: Truck },
-    ],
-  },
-  {
-    group: 'Restoration',
-    items: [
-      { title: 'Planting Sites', href: '/restoration/sites', icon: Map },
-      { title: 'Planting Events', href: '/restoration/events', icon: Calendar },
-      { title: 'Survival Checks', href: '/restoration/survival', icon: CheckCircle2 },
-    ],
-  },
-  {
-    group: 'Management',
-    items: [
-      { title: 'Network Members', href: '/management/members', icon: Users },
-      { title: 'Team', href: '/management/team', icon: UserCog },
-      { title: 'Audit Log', href: '/management/audit', icon: ClipboardList },
-      { title: 'Settings', href: '/management/settings', icon: Settings },
-    ],
-  },
-  {
-    group: 'Other',
-    items: [
-      { title: 'Resources', href: '/resources', icon: BookOpen },
-    ],
-  },
-];
-
-export function Sidebar() {
-  const [isOpen, setIsOpen] = useState(true);
+export function Sidebar({ role, collapsed, open, onClose }: SidebarProps) {
+  const path = usePathname();
+  const groups = navigation
+    .map((g) => ({ ...g, items: g.items.filter((i) => !i.adminOnly || role === 'admin') }))
+    .filter((g) => g.items.length > 0);
 
   return (
     <>
-      {/* Mobile Toggle */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-4 left-4 z-50 p-2 bg-primary text-primary-foreground rounded-md lg:hidden"
-      >
-        {isOpen ? <X size={20} /> : <Menu size={20} />}
-      </button>
-
+      {open && <div className="fixed inset-0 z-30 bg-primary-deep/40 backdrop-blur-sm lg:hidden" onClick={onClose} aria-hidden="true" />}
       <aside
+        aria-label="Main navigation"
         className={cn(
-          "fixed inset-y-0 left-0 z-40 w-64 bg-background border-r transition-transform duration-300 ease-in-out lg:translate-x-0",
-          !isOpen && "-translate-x-full lg:w-20"
+          'fixed inset-y-0 left-0 z-40 flex w-[264px] flex-col border-r bg-surface transition-transform duration-200 lg:translate-x-0',
+          open ? 'translate-x-0' : '-translate-x-full',
+          collapsed && 'lg:w-[72px]'
         )}
       >
-        <div className="flex flex-col h-full">
-          <div className="p-6 font-bold text-xl border-b flex items-center gap-3">
-            <div className="w-8 h-8 bg-primary rounded-full shrink-0" />
-            {isOpen && <span>Mpingo</span>}
-          </div>
-
-          <nav className="flex-1 overflow-y-auto p-4 space-y-8">
-            {navigation.map((group) => (
-              <div key={group.group} className="space-y-2">
-                {isOpen && (
-                  <h3 className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    {group.group}
-                  </h3>
-                )}
-                <div className="space-y-1">
-                  {group.items.map((item) => (
-                    <a
-                      key={item.title}
-                      href={item.href}
-                      className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors hover:bg-accent hover:text-accent-foreground group"
-                    >
-                      <item.icon size={20} className="shrink-0 text-muted-foreground group-hover:text-foreground" />
-                      {isOpen && <span>{item.title}</span>}
-                    </a>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </nav>
+        <div className="flex h-16 shrink-0 items-center justify-between border-b px-4">
+          <Link href="/dashboard" className="flex items-center gap-3" onClick={onClose}>
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">M</span>
+            <span className={cn('leading-tight', collapsed && 'lg:hidden')}>
+              <span className="block text-sm font-semibold">Mpingo OS</span>
+              <span className="block text-xs text-muted-foreground">Seed to Tree</span>
+            </span>
+          </Link>
+          <button onClick={onClose} className="rounded-md p-2 text-muted-foreground hover:bg-accent lg:hidden" aria-label="Close menu">
+            <X size={18} />
+          </button>
         </div>
+        <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4">
+          {groups.map((g) => (
+            <div key={g.group}>
+              <p className={cn('mb-1 px-3 text-xs font-medium text-muted-foreground', collapsed && 'lg:hidden')}>{g.group}</p>
+              <ul className="space-y-0.5">
+                {g.items.map((item) => {
+                  const active = path === item.href || path.startsWith(item.href + '/');
+                  return (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href}
+                        onClick={onClose}
+                        title={item.title}
+                        aria-current={active ? 'page' : undefined}
+                        className={cn(
+                          'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                          active ? 'bg-primary text-primary-foreground' : 'text-text-secondary hover:bg-accent hover:text-accent-foreground',
+                          collapsed && 'lg:justify-center'
+                        )}
+                      >
+                        <item.icon size={18} className="shrink-0" />
+                        <span className={cn(collapsed && 'lg:hidden')}>{item.title}</span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+        </nav>
       </aside>
     </>
   );

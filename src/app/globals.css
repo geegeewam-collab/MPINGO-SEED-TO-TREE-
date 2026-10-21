@@ -2,48 +2,76 @@
 
 :root {
   --background: #F7F7F1;
-  --foreground: #242C27;
+  --foreground: #202923;
   --primary: #214D38;
+  --primary-foreground: #FFFFFF;
   --primary-deep: #173B2C;
   --sage: #E5EDE3;
   --surface: #FFFFFF;
-  --text-primary: #242C27;
-  --text-secondary: #68736B;
-  --border: #E0E5DE;
+  --muted: #EFF2EC;
+  --muted-foreground: #69736C;
+  --accent: #E5EDE3;
+  --accent-foreground: #173B2C;
+  --border: #E0E6DF;
+  --gold: #C3A36A;
   --success: #287A4B;
-  --warning: #B7791F;
+  --warning: #AE772B;
   --error: #B44343;
+  --text-primary: #202923;
+  --text-secondary: #69736C;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #121A16;
+    --foreground: #EAEFE8;
+    --primary: #7FBF99;
+    --primary-foreground: #0F1B15;
+    --primary-deep: #0B1410;
+    --sage: #1D2B24;
+    --surface: #18221D;
+    --muted: #1D2B24;
+    --muted-foreground: #9FAEA4;
+    --accent: #233329;
+    --accent-foreground: #EAEFE8;
+    --border: #2A3A31;
+    --gold: #D2B77F;
+    --success: #6DC28F;
+    --warning: #D9A55B;
+    --error: #E28A8A;
+    --text-primary: #EAEFE8;
+    --text-secondary: #9FAEA4;
+  }
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
   --color-primary-deep: var(--primary-deep);
   --color-sage: var(--sage);
   --color-surface: var(--surface);
-  --color-text-primary: var(--text-primary);
-  --color-text-secondary: var(--text-secondary);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
   --color-border: var(--border);
+  --color-gold: var(--gold);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-error: var(--error);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #173B2C;
-    --foreground: #E5EDE3;
-    --surface: #214D38;
-    --text-primary: #F7F7F1;
-    --text-secondary: #B7B7A7;
-  }
+@layer base {
+  *, ::before, ::after { border-color: var(--border); }
+  body { background: var(--background); color: var(--foreground); font-family: var(--font-sans); }
+  :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
