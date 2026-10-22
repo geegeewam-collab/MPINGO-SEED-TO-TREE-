@@ -1,36 +1,19 @@
-# Build Status: Mpingo Seed-to-Tree Network
+# Build status (verified against the source, not earlier progress notes)
 
-## Current Milestone: Milestone 3 — Distribution, Inventory, GPS Planting Sites and Planting Events
+Last verified: migrations applied and behaviour-tested on a real Postgres (`python supabase/tests/run_tests.py`, 35 checks);
+`tsc`, `next build` pass; lint clean on all files changed in this pass.
 
-### Implementation Plan
-1. **Database Schema**: Create migration `0004_nursery_and_distribution.sql` for nurseries, batches, inventory movements, distributions, planting sites, and planting events.
-2. **Inventory Logic**: Implement atomic PostgreSQL functions for seedling stock deduction at dispatch.
-3. **Distribution UI**: Build `/app/distributions` for managing seedling transfers (Draft -> Approved -> Dispatched -> Received).
-4. **Planting Sites UI**: Build `/app/planting-sites` with integrated Browser Geolocation API for GPS capture.
-5. **Planting Events UI**: Build `/app/planting-events` to record actual planting linked to distributions.
-6. **Security**: Implement RLS policies to protect sensitive site coordinates and operational records.
-7. **Verification**: Test the full chain: Nursery Batch -> Distribution -> Planting Event.
+## Working
+- Database: migrations 0001-0008 apply cleanly. Reference numbers are generated; stock functions are role-checked; survival checks must add up to the number planted and cannot be reviewed by their submitter; verified checks are final; audit trail is written by triggers.
+- Public: `/join` and `/seed-requests/new` save to the database (success is shown only after a successful save). `/trace/[token]` and `/groves/[slug]` read approved summaries through `public_trace` and `public_grove` (no coordinates, no exact collection place, only verified survival results).
+- Staff app: sign-in, role-aware navigation, overview with live counts, read-only registries for every module, survival report from verified checks.
 
-### Progress
-- [ ] Database migrations for nurseries and distributions.
-- [ ] Atomic inventory functions.
-- [ ] Distribution management screens.
-- [ ] Planting site registry with GPS capture.
-- [ ] Planting event recording.
-- [ ] RLS policy configuration.
+## Not built yet
+- Create / edit / detail screens for every module (nothing can be added from the interface yet).
+- Verifier review screen; request and membership review actions; role management for admins.
+- Offline capture: `src/lib/offline` exists but nothing calls it; no PWA manifest or service worker; queue needs retry for stuck items and idempotent keys.
+- QR code generation, map, photo upload (Supabase Storage), report export, member directory, password reset page.
+- Public form spam protection beyond a hidden field (add a captcha or rate limit before launch).
 
-## Implemented Features
-- [x] Authentication and Role-Based Access Control (RBAC).
-- [x] Mother Tree Registry (Database).
-- [x] Seed Lot Management & Provenance (Database).
-- [x] Public Seed Lot Traceability (Database).
-- [x] Basic Application Shell.
-
-## Known Issues
-- [ ] Documentation lags behind actual code progress (updated now).
-- [ ] Mother Tree and Seed Lot UI components need final verification.
-
-## Next Milestone: Milestone 4 — Survival Verification and Sponsor Reporting
-- [ ] Survival check forms and calculations.
-- [ ] Verifier approval workflow.
-- [ ] Internal and Public Grove reporting.
+## Known pre-existing lint errors (not touched)
+`src/app/page.tsx`, `src/app/resources/page.tsx`, `src/lib/calculations/survival.ts`, `src/components/ui/Input.tsx`, `src/components/ui/Table.tsx`, `src/lib/offline/db.ts`, `src/lib/offline/sync.ts`.

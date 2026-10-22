@@ -44,8 +44,8 @@ export default function LoginPage() {
       
       router.push('/dashboard');
       router.refresh();
-    } catch (err: any) {
-      setError(err.message || "An unexpected error occurred. Please try again.");
+    } catch (err) {
+      setError(err instanceof Error && err.message ? err.message : "An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -98,12 +98,7 @@ export default function LoginPage() {
             </div>
 
             <div className="flex justify-end">
-              <Link 
-                href="/auth/forgot-password" 
-                className="text-sm text-primary hover:underline"
-              >
-                Forgot password?
-              </Link>
+              <p className="text-xs text-muted-foreground">Forgot your password? Ask an administrator to reset it.</p>
             </div>
 
             <Button 
@@ -123,7 +118,7 @@ export default function LoginPage() {
           </form>
         </CardContent>
         <CardFooter className="text-center text-sm text-muted-foreground">
-          Don't have an account? <Link href="/join" className="text-primary hover:underline font-medium">Join the network</Link>
+          Don&apos;t have an account? <Link href="/join" className="text-primary hover:underline font-medium">Join the network</Link>
         </CardFooter>
       </Card>
     </div>

@@ -89,7 +89,7 @@ CREATE POLICY "Authorized roles can view survival checks" ON survival_checks FOR
 USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin', 'coordinator', 'verifier')));
 
 CREATE POLICY "Verifiers and coordinators can submit checks" ON survival_checks FOR INSERT
-USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin', 'coordinator', 'verifier')));
+WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin', 'coordinator', 'verifier')));
 
 CREATE POLICY "Only verifiers and admins can verify checks" ON survival_checks FOR UPDATE
 USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin', 'verifier')));

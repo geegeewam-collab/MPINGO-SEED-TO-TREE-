@@ -1,110 +1,46 @@
 "use client";
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
-import { Input } from '@/components/ui/Input';
-import { TreePine, User, MapPin, FileText, CheckCircle2 } from 'lucide-react';
+import { useActionState } from 'react';
+import { submitMembership, type FormState } from '@/app/actions/public';
+import { Field, PublicFormShell, SuccessPanel, inputClass } from '@/components/forms/Field';
+
+const initial: FormState = { status: 'idle' };
 
 export default function JoinPage() {
-  const [submitted, setSubmitted] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-
-    // Implementation would call Supabase member_applications table
-    setTimeout(() => {
-      setSubmitted(true);
-      setLoading(false);
-    }, 1000);
+  const [state, action, pending] = useActionState(submitMembership, initial);
+  const e = state.fieldErrors ?? {};
+  if (state.status === 'success') {
+    return <SuccessPanel title="Application received" body="Thank you. A coordinator will review your details and contact you by email." />;
   }
-
-  if (submitted) {
-    return (
-      <div className="min-h-screen bg-[#F7F7F1] flex items-center justify-center p-6">
-        <Card className="max-w-md w-full p-12 text-center space-y-6 bg-white border-[#E0E5DE]">
-          <div className="mx-auto w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center">
-            <CheckCircle2 size={32} />
-          </div>
-          <div className="space-y-2">
-            <h1 className="text-2xl font-bold text-[#242C27]">Application Submitted</h1>
-            <p className="text-[#68736B]">Thank you for applying to join the network. Our coordinators will review your details and get back to you soon.</p>
-          </div>
-          <Button onClick={() => window.location.href = '/'} className="w-full bg-[#214D38] text-white">
-            Return Home
-          </Button>
-        </Card>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-[#F7F7F1] py-20 px-6">
-      <div className="max-w-3xl mx-auto">
-        <div className="text-center mb-12 space-y-4">
-          <h1 className="text-4xl font-bold text-[#242C27]">Join the Network</h1>
-          <p className="text-[#68736B] max-w-xl mx-auto">
-            Become a registered part of the Mpingo restoration effort. Whether you're a grower, nursery, or researcher, we welcome your participation.
-          </p>
+    <PublicFormShell title="Join the network" intro="Growers, nurseries, researchers and restoration partners can register here. A coordinator reviews every application.">
+      <form action={action} className="space-y-5" noValidate>
+        <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
+        <div className="grid gap-5 sm:grid-cols-2">
+          <Field label="Full name" name="full_name" error={e.full_name}><input id="full_name" name="full_name" required className={inputClass} aria-invalid={!!e.full_name} autoComplete="name" /></Field>
+          <Field label="Email address" name="email" error={e.email}><input id="email" name="email" type="email" required className={inputClass} aria-invalid={!!e.email} autoComplete="email" /></Field>
+          <Field label="Organisation (optional)" name="organisation_name" error={e.organisation_name}><input id="organisation_name" name="organisation_name" className={inputClass} /></Field>
+          <Field label="Phone (optional)" name="phone" error={e.phone}><input id="phone" name="phone" type="tel" className={inputClass} autoComplete="tel" /></Field>
+          <Field label="I am a" name="applicant_type" error={e.applicant_type}>
+            <select id="applicant_type" name="applicant_type" className={inputClass} defaultValue="grower">
+              <option value="grower">Individual grower</option><option value="nursery">Nursery operator</option><option value="researcher">Researcher or academic</option>
+              <option value="organisation">Conservation organisation</option><option value="student">Student or volunteer</option><option value="other">Other</option>
+            </select>
+          </Field>
+          <Field label="County or region" name="county" error={e.county}><input id="county" name="county" required className={inputClass} aria-invalid={!!e.county} /></Field>
         </div>
-
-        <Card className="bg-white p-8 border-[#E0E5DE] shadow-sm space-y-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-[#242C27]">Full Name / Organisation</label>
-                <Input required className="border-[#E0E5DE]" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-[#242C27]">Email Address</label>
-                <Input type="email" required className="border-[#E0E5DE]" />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-[#242C27]">Applicant Type</label>
-                <select className="w-full p-2 border border-[#E0E5DE] rounded-md bg-white text-sm">
-                  <option value="grower">Individual Grower</option>
-                  <option value="nursery">Nursery Operator</option>
-                  <option value="researcher">Researcher / Academic</option>
-                  <option value="organisation">Conservation Organisation</option>
-                  <option value="student">Student / Volunteer</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-[#242C27]">County / Region</label>
-                <Input required className="border-[#E0E5DE]" />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-[#242C27]">Experience & Interest</label>
-              <textarea
-                className="w-full p-2 border border-[#E0E5DE] rounded-md bg-white text-sm h-32"
-                placeholder="Tell us about your experience with Mpingo or why you want to participate..."
-              />
-            </div>
-
-            <div className="flex items-start gap-3 p-4 bg-[#F7F7F1] rounded-lg border border-[#E0E5DE]">
-              <input
-                type="checkbox"
-                required
-                className="mt-1 rounded border-gray-300 text-[#214D38]"
-              />
-              <p className="text-xs text-[#68736B] leading-relaxed">
-                I consent to the handling of my data for the purpose of coordinating Mpingo restoration efforts. I understand my information will be used to connect me with seed sources and monitor restoration outcomes.
-              </p>
-            </div>
-
-            <Button type="submit" disabled={loading} className="w-full bg-[#214D38] text-white py-4 text-lg font-bold">
-              {loading ? 'Submitting...' : 'Submit Application'}
-            </Button>
-          </form>
-        </Card>
-      </div>
-    </div>
+        <Field label="Where you would grow or work (optional)" name="location_details" error={e.location_details}><input id="location_details" name="location_details" className={inputClass} /></Field>
+        <Field label="Your experience (optional)" name="experience_notes" error={e.experience_notes}><textarea id="experience_notes" name="experience_notes" rows={3} className={inputClass} /></Field>
+        <Field label="What you hope to do (optional)" name="participation_goal" error={e.participation_goal}><textarea id="participation_goal" name="participation_goal" rows={3} className={inputClass} /></Field>
+        <div className="space-y-1.5">
+          <label className="flex items-start gap-3 text-sm">
+            <input type="checkbox" name="consent" className="mt-1 h-4 w-4" aria-invalid={!!e.consent} />
+            <span>I agree that the network may store and use my details to review this application and contact me.</span>
+          </label>
+          {e.consent && <p role="alert" className="text-xs text-error">{e.consent}</p>}
+        </div>
+        {state.status === 'error' && <p role="alert" className="rounded-lg border border-error/30 bg-error/5 p-3 text-sm text-error">{state.message}</p>}
+        <button type="submit" disabled={pending} className="w-full rounded-lg bg-primary px-4 py-3 text-sm font-medium text-primary-foreground disabled:opacity-60">{pending ? 'Sending…' : 'Submit application'}</button>
+      </form>
+    </PublicFormShell>
   );
 }
