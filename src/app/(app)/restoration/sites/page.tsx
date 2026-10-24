@@ -3,6 +3,7 @@ import { Registry } from '@/components/modules/Registry';
 export default function Page() {
   return (
     <Registry
+      slug="sites"
       title="Planting Sites"
       description="Restoration sites. Coordinates are private and are not shown here."
       table="planting_sites"

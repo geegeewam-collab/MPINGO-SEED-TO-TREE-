@@ -1,0 +1,13 @@
+{
+  "name": "Mpingo Seed-to-Tree Network",
+  "short_name": "Mpingo",
+  "start_url": "/field",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#F7F7F1",
+  "theme_color": "#214D38",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

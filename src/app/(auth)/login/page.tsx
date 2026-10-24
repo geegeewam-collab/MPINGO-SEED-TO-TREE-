@@ -1,126 +1,39 @@
 "use client";
-
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { createClient } from '@/lib/supabase/client';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/Card';
-import { Alert } from '@/components/ui/Alert';
-import { Loader2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-
-const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-});
-
-type LoginFormValues = z.infer<typeof loginSchema>;
+import { useActionState } from 'react';
+import { signIn } from '@/app/actions/auth';
+import type { FormState } from '@/app/actions/public';
+import { Field, inputClass } from '@/components/forms/Field';
+import { Rings } from '@/components/brand/Rings';
 
 export default function LoginPage() {
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
-  });
-
-  async function onSubmit(values: LoginFormValues) {
-    setIsLoading(true);
-    setError(null);
-    try {
-      // Create the client on submit (browser only), never during render/prerender
-      const supabase = createClient();
-      const { error: authError } = await supabase.auth.signInWithPassword({
-        email: values.email,
-        password: values.password,
-      });
-
-      if (authError) throw authError;
-      
-      router.push('/dashboard');
-      router.refresh();
-    } catch (err) {
-      setError(err instanceof Error && err.message ? err.message : "An unexpected error occurred. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
+  const [state, action, pending] = useActionState<FormState, FormData>(signIn, { status: 'idle' });
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-             <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white font-bold text-xl">
-               M
-             </div>
-          </div>
-          <CardTitle className="text-2xl font-bold">Sign In</CardTitle>
-          <CardDescription>
-            Welcome back to the Mpingo Seed-to-Tree Network
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {error && (
-              <Alert type="error">
-                {error}
-              </Alert>
-            )}
-            
-            <div className="space-y-2">
-              <Input 
-                {...register("email")} 
-                type="email" 
-                placeholder="email@example.com" 
-                className={errors.email ? "border-error" : ""}
-              />
-              {errors.email && (
-                <p className="text-xs text-error">{errors.email.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Input 
-                {...register("password")} 
-                type="password" 
-                placeholder="••••••••" 
-                className={errors.password ? "border-error" : ""}
-              />
-              {errors.password && (
-                <p className="text-xs text-error">{errors.password.message}</p>
-              )}
-            </div>
-
-            <div className="flex justify-end">
-              <p className="text-xs text-muted-foreground">Forgot your password? Ask an administrator to reset it.</p>
-            </div>
-
-            <Button 
-              type="submit" 
-              className="w-full" 
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing in...
-                </>
-              ) : (
-                "Sign In"
-              )}
-            </Button>
+    <div className="grid min-h-screen lg:grid-cols-2">
+      <aside className="relative hidden overflow-hidden bg-primary-deep p-12 text-white lg:flex lg:flex-col lg:justify-between">
+        <Rings className="pointer-events-none absolute -right-40 -top-40 h-[40rem] w-[40rem] text-white/10" />
+        <Link href="/" className="relative text-sm font-medium text-white/80 hover:text-white">Mpingo Seed-to-Tree Network</Link>
+        <div className="relative max-w-md">
+          <p className="font-serif text-4xl leading-tight">Every Mpingo, followed from seed to living tree.</p>
+          <p className="mt-4 text-sm text-white/70">Sign in to record, review and report the restoration work.</p>
+        </div>
+      </aside>
+      <main className="flex items-center justify-center bg-background p-6">
+        <div className="w-full max-w-sm">
+          <h1 className="font-serif text-3xl">Sign in</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Staff, growers and partners with an account.</p>
+          <form action={action} className="mt-8 space-y-5" noValidate>
+            <Field label="Email address" name="email"><input id="email" name="email" type="email" required autoComplete="email" className={inputClass} /></Field>
+            <Field label="Password" name="password"><input id="password" name="password" type="password" required autoComplete="current-password" className={inputClass} /></Field>
+            {state.status === 'error' && <p role="alert" className="rounded-lg border border-error/30 bg-error/5 p-3 text-sm text-error">{state.message}</p>}
+            <button type="submit" disabled={pending} className="w-full rounded-lg bg-primary px-4 py-3 text-sm font-medium text-primary-foreground disabled:opacity-60">{pending ? 'Signing in…' : 'Sign in'}</button>
           </form>
-        </CardContent>
-        <CardFooter className="text-center text-sm text-muted-foreground">
-          Don&apos;t have an account? <Link href="/join" className="text-primary hover:underline font-medium">Join the network</Link>
-        </CardFooter>
-      </Card>
+          <div className="mt-6 space-y-2 text-sm text-muted-foreground">
+            <p><Link href="/auth/forgot-password" className="text-primary hover:underline">Forgot your password?</Link></p>
+            <p>No account yet? <Link href="/join" className="text-primary hover:underline">Join the network</Link></p>
+          </div>
+        </div>
+      </main>
     </div>
   );
 }

@@ -1,89 +1,87 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
-import { countRows, sumColumn, fmtNum } from '@/lib/queries';
+import { countRows, fmtNum, fmtPct } from '@/lib/queries';
+import { calculateSurvivalMetrics } from '@/lib/calculations/survival';
 import { PageHeader } from '@/components/ui/PageHeader';
-import { StatusBadge } from '@/components/ui/StatusBadge';
-import { EmptyState } from '@/components/ui/EmptyState';
 
-interface RecentCheck { id: string; reference: string | null; inspection_date: string | null; submission_status: string }
+interface Summary {
+  seed_lots: number; nurseries: number; seedlings_in_stock: number; trees_planted: number; verified_checks: number;
+  survival: { planted: number; alive: number; dead: number; unresolved: number; uninspected: number };
+}
+interface Task { label: string; count: number | null; href: string }
 
 export default async function DashboardPage() {
   const sb = await createClient();
   const { data: { user } } = await sb.auth.getUser();
-  const { data: profile } = await sb.from('profiles').select('full_name').eq('id', user?.id ?? '').single();
-
-  const [lots, stock, dist, events, planted, verified, submitted, requests, apps, recent] = await Promise.all([
-    countRows(sb, 'seed_lots'),
-    sumColumn(sb, 'nursery_batches', 'current_stock'),
-    countRows(sb, 'distributions'),
-    countRows(sb, 'planting_events'),
-    sumColumn(sb, 'planting_events', 'quantity_planted'),
-    countRows(sb, 'survival_checks', ['submission_status', 'verified']),
-    countRows(sb, 'survival_checks', ['submission_status', 'submitted']),
-    countRows(sb, 'seed_requests'),
-    countRows(sb, 'member_applications'),
-    sb.from('survival_checks').select('id, reference, inspection_date, submission_status').order('created_at', { ascending: false }).limit(6),
+  const uid = user?.id ?? '';
+  const [{ data: profile }, { data: sumData }] = await Promise.all([
+    sb.from('profiles').select('full_name, role').eq('id', uid).maybeSingle(),
+    sb.rpc('network_summary'),
   ]);
-  const recentRows = (recent.data ?? []) as unknown as RecentCheck[];
+  const role = String(profile?.role ?? '');
+  const s = sumData as Summary | null;
+  const m = s && s.survival.planted > 0 ? calculateSurvivalMetrics(s.survival.planted, s.survival.alive, s.survival.dead, s.survival.unresolved, s.survival.uninspected) : null;
 
-  const journey = [
-    { label: 'Seed lots', value: fmtNum(lots), sub: 'collected', href: '/provenance/seed-lots' },
-    { label: 'Seedlings in stock', value: fmtNum(stock), sub: 'across all batches', href: '/production/batches' },
-    { label: 'Distributions', value: fmtNum(dist), sub: 'recorded', href: '/production/distributions' },
-    { label: 'Trees planted', value: fmtNum(planted), sub: `${fmtNum(events)} planting events`, href: '/restoration/events' },
-    { label: 'Verified checks', value: fmtNum(verified), sub: 'survival inspections', href: '/restoration/survival' },
+  const tasks: Task[] = [];
+  if (['admin', 'coordinator'].includes(role)) {
+    tasks.push({ label: 'Seed requests waiting for review', count: await countRows(sb, 'seed_requests', ['status', 'submitted']), href: '/network/requests' });
+    tasks.push({ label: 'Membership applications waiting', count: await countRows(sb, 'member_applications', ['status', 'pending']), href: '/management/members' });
+    tasks.push({ label: 'Distributions waiting for approval', count: await countRows(sb, 'distributions', ['status', 'draft']), href: '/production/distributions' });
+  }
+  if (['admin', 'coordinator', 'verifier'].includes(role)) {
+    tasks.push({ label: role === 'verifier' ? 'Survival checks you can review' : 'Survival checks waiting for verification', count: await countRows(sb, 'survival_checks', ['submission_status', 'submitted'], ...(role === 'verifier' ? [['observer_id', uid, 'neq'] as [string, string, 'neq']] : [])), href: '/restoration/survival' });
+  }
+  if (role === 'nursery_operator') {
+    tasks.push({ label: 'Your approved distributions ready to dispatch', count: await countRows(sb, 'distributions', ['status', 'approved']), href: '/production/distributions' });
+    tasks.push({ label: 'Your nursery batches', count: await countRows(sb, 'nursery_batches'), href: '/production/batches' });
+  }
+  if (role === 'grower') {
+    tasks.push({ label: 'Your planting sites', count: await countRows(sb, 'planting_sites'), href: '/restoration/sites' });
+    tasks.push({ label: 'Seedlings dispatched to you', count: await countRows(sb, 'distributions', ['status', 'dispatched']), href: '/production/distributions' });
+  }
+
+  const kpis = [
+    { label: 'Trees planted', value: fmtNum(s?.trees_planted ?? null) },
+    { label: 'Seedlings in nurseries', value: fmtNum(s?.seedlings_in_stock ?? null) },
+    { label: 'Seed lots', value: fmtNum(s?.seed_lots ?? null) },
+    { label: 'Approved nurseries', value: fmtNum(s?.nurseries ?? null) },
   ];
 
   return (
     <div className="space-y-8">
-      <PageHeader title={`Welcome${profile?.full_name ? `, ${profile.full_name}` : ''}`} description="Restoration operations at a glance. Every figure comes from live records; a dash means the figure could not be loaded." />
+      <PageHeader title={`Welcome${profile?.full_name ? `, ${profile.full_name}` : ''}`} description="The shared picture for everyone in the network. Figures come from live records." />
 
-      <section aria-labelledby="attn" className="rounded-xl border bg-surface p-5">
-        <h2 id="attn" className="text-base font-semibold">Needs attention</h2>
-        {submitted && submitted > 0 ? (
-          <Link href="/restoration/survival" className="mt-3 flex items-center justify-between rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm font-medium hover:bg-warning/15">
-            <span>{submitted} survival {submitted === 1 ? 'check is' : 'checks are'} waiting for verification</span>
-            <span className="text-warning">Review</span>
-          </Link>
-        ) : (
-          <p className="mt-2 text-sm text-muted-foreground">{submitted === null ? 'The verification queue could not be loaded.' : 'No survival checks are waiting for verification.'}</p>
-        )}
-        <p className="mt-3 text-xs text-muted-foreground">
-          On file: <Link className="underline" href="/network/requests">{fmtNum(requests)} seed requests</Link> and <Link className="underline" href="/management/members">{fmtNum(apps)} membership applications</Link>.
-        </p>
-      </section>
+      {tasks.length > 0 && (
+        <section aria-labelledby="work" className="rounded-2xl border bg-surface p-5">
+          <h2 id="work" className="text-base font-semibold">Your work</h2>
+          <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+            {tasks.map((t) => (
+              <li key={t.label}>
+                <Link href={t.href} className="flex items-center justify-between rounded-lg border px-4 py-3 text-sm transition-colors hover:bg-accent">
+                  <span>{t.label}</span><span className={`text-lg font-semibold ${t.count ? 'text-primary' : 'text-muted-foreground'}`}>{fmtNum(t.count)}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
-      <section aria-labelledby="chain">
-        <h2 id="chain" className="mb-3 text-base font-semibold">The restoration chain</h2>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          {journey.map((j) => (
-            <Link key={j.label} href={j.href} className="rounded-xl border bg-surface p-4 transition-colors hover:border-primary/50 hover:bg-muted/50">
-              <p className="text-sm text-muted-foreground">{j.label}</p>
-              <p className="mt-1 text-2xl font-semibold">{j.value}</p>
-              <p className="mt-1 text-xs text-muted-foreground">{j.sub}</p>
-            </Link>
+      <section aria-labelledby="net" className="space-y-4">
+        <h2 id="net" className="text-base font-semibold">The network today</h2>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {kpis.map((k) => (
+            <div key={k.label} className="rounded-xl border bg-surface p-4"><p className="text-sm text-muted-foreground">{k.label}</p><p className="mt-1 text-3xl font-semibold tracking-tight">{k.value}</p></div>
           ))}
         </div>
-      </section>
-
-      <section aria-labelledby="recent">
-        <h2 id="recent" className="mb-3 text-base font-semibold">Latest survival checks</h2>
-        {recentRows.length === 0 ? (
-          <EmptyState title="No survival checks yet" body="Checks appear here once field inspections are recorded." />
-        ) : (
-          <div className="overflow-x-auto rounded-xl border bg-surface">
-            <table className="w-full text-sm">
-              <thead className="bg-sage/50 text-left text-muted-foreground"><tr>
-                <th scope="col" className="px-4 py-3 font-medium">Reference</th><th scope="col" className="px-4 py-3 font-medium">Inspected</th><th scope="col" className="px-4 py-3 font-medium">Status</th>
-              </tr></thead>
-              <tbody className="divide-y">
-                {recentRows.map((r) => (
-                  <tr key={r.id}><td className="px-4 py-3">{r.reference || '—'}</td><td className="px-4 py-3">{r.inspection_date || '—'}</td><td className="px-4 py-3"><StatusBadge value={r.submission_status} /></td></tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <div className="rounded-xl border bg-surface p-5">
+          <h3 className="text-sm font-semibold">Verified survival</h3>
+          {m && s ? (
+            <>
+              <p className="mt-2 text-3xl font-semibold">{fmtPct(m.survivalAmongClassified)} <span className="text-sm font-normal text-muted-foreground">alive among trees classified</span></p>
+              <p className="mt-2 text-sm text-muted-foreground">{fmtPct(m.confirmedAliveShare)} of trees planted are confirmed alive, and {fmtPct(m.assessmentCoverage)} have been assessed. Based on the latest verified check for each planting ({fmtNum(s.verified_checks)} verified checks). Trees that could not be confirmed are not counted as alive or dead.</p>
+            </>
+          ) : <p className="mt-2 text-sm text-muted-foreground">No verified survival results yet. Figures appear here once a field check has been reviewed by a second person.</p>}
+        </div>
       </section>
     </div>
   );

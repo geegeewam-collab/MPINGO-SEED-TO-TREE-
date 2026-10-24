@@ -3,6 +3,7 @@ import { Registry } from '@/components/modules/Registry';
 export default function Page() {
   return (
     <Registry
+      slug="batches"
       title="Nursery Batches"
       description="Sowing, germination and current stock for each batch."
       table="nursery_batches"

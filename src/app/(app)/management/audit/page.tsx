@@ -1,14 +1,7 @@
-import { Registry } from '@/components/modules/Registry';
+import { redirect } from 'next/navigation';
 
 export default function Page() {
-  return (
-    <Registry
-      title="Audit Log"
-      description="A read-only history of sensitive actions."
-      table="audit_logs"
-      columns={[{key:'action',label:'Action'},{key:'entity_type',label:'Record type'},{key:'created_at',label:'When',date:true}]}
-    />
-  );
+  redirect('/admin/audit');
 }
 
 export const instant = false;

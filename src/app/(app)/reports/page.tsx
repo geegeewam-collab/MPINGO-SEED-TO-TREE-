@@ -37,7 +37,7 @@ export default async function ReportsPage() {
 
   return (
     <div>
-      <PageHeader title="Reports" description="Survival results calculated from verified field checks only." />
+      <PageHeader title="Reports" description="Survival results calculated from verified field checks only." actions={<a href="/reports/export" className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-accent">Download CSV</a>} />
       {failed ? (
         <div role="alert" className="rounded-xl border border-error/30 bg-error/5 p-4 text-sm text-error">Report data could not be loaded. Your role may not have access, or the database is not configured.</div>
       ) : latest.size === 0 ? (

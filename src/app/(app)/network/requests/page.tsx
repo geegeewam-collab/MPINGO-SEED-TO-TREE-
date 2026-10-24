@@ -3,6 +3,7 @@ import { Registry } from '@/components/modules/Registry';
 export default function Page() {
   return (
     <Registry
+      slug="requests"
       title="Seed Requests"
       description="Requests for seed or seedlings. Contact details are not shown in this list."
       table="seed_requests"

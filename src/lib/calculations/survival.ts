@@ -5,6 +5,7 @@ export function calculateSurvivalMetrics(
   unresolved: number,
   uninspected: number
 ) {
+  void uninspected; // kept so callers pass all four counts; coverage is measured against the number planted
   const classified = alive + dead;
   const totalObserved = alive + dead + unresolved;
 

@@ -1,57 +1,43 @@
 import { createClient } from '@/lib/supabase/client';
-import {
-  getQueuedOperations,
-  updateOperationStatus,
-  removeOperation
-} from './db';
+import { listOperations, updateOperation, removeOperation, resetStuck, refreshQueueCount, type EntityType } from './db';
 
-export async function syncOfflineQueue() {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+export interface SyncResult { sent: number; failed: number; waiting: number; stopped: 'offline' | 'signed-out' | null }
+const TABLE: Record<EntityType, string> = { planting_event: 'planting_events', survival_check: 'survival_checks' };
+let running = false;
 
-  if (!user) return { synced: 0, errors: 0 };
+export const isNetworkError = (e: { code?: string; message: string }) => !e.code && /fetch|network|load failed/i.test(e.message);
 
-  const queue = await getQueuedOperations();
-  let syncedCount = 0;
-  let errorCount = 0;
+export function explain(e: { code?: string; message: string }): string {
+  if (e.code === 'P0001') return e.message; // our own database rules, written to be read by people
+  if (e.code === '42501') return 'You do not have permission to save this record.';
+  if (e.code === '23503') return 'A record this one depends on is missing or not visible to you.';
+  return 'The server rejected this record.';
+}
 
-  for (const op of queue) {
-    try {
-      // Mark as syncing to prevent duplicate concurrent attempts
-      await updateOperationStatus(op.id, 'syncing');
-
-      let error = null;
-
-      switch (op.entityType) {
-        case 'planting_site':
-          const { error: siteErr } = await supabase.from('planting_sites').insert([op.payload]);
-          error = siteErr;
-          break;
-        case 'planting_event':
-          const { error: eventErr } = await supabase.from('planting_events').insert([op.payload]);
-          error = eventErr;
-          break;
-        case 'survival_check':
-          const { error: checkErr } = await supabase.from('survival_checks').insert([op.payload]);
-          error = checkErr;
-          break;
-        default:
-          throw new Error(`Unsupported entity type: ${op.entityType}`);
-      }
-
-      if (error) {
-        throw error;
-      }
-
-      // Success: Remove from queue
-      await removeOperation(op.id);
-      syncedCount++;
-    } catch (err: any) {
-      console.error(`Sync failed for ${op.id}:`, err);
-      await updateOperationStatus(op.id, 'error', err.message);
-      errorCount++;
+/** Sends waiting records one at a time. Records are only removed from the device after the server confirms them. */
+export async function syncQueue(userId: string): Promise<SyncResult> {
+  if (running) return { sent: 0, failed: 0, waiting: 0, stopped: null };
+  running = true;
+  const result: SyncResult = { sent: 0, failed: 0, waiting: 0, stopped: null };
+  try {
+    const supabase = createClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session || session.user.id !== userId) { result.stopped = 'signed-out'; return result; }
+    await resetStuck(userId);
+    const waiting = (await listOperations(userId)).filter((o) => o.status === 'pending');
+    for (const op of waiting) {
+      await updateOperation(op.id, { status: 'syncing', attempts: op.attempts + 1 });
+      const { error } = await supabase.from(TABLE[op.entityType]).insert(op.payload);
+      if (!error || error.code === '23505') { await removeOperation(op.id, userId); result.sent++; continue; } // 23505: this exact record is already stored
+      if (isNetworkError(error)) { await updateOperation(op.id, { status: 'pending', lastError: 'No connection yet' }); result.stopped = 'offline'; break; }
+      if (error.code?.startsWith('PGRST3')) { await updateOperation(op.id, { status: 'pending', lastError: 'Your sign-in has expired. Sign in again to send this.' }); result.stopped = 'signed-out'; break; }
+      await updateOperation(op.id, { status: 'failed', lastError: explain(error) });
+      result.failed++;
     }
+    result.waiting = (await listOperations(userId)).filter((o) => o.status === 'pending').length;
+    return result;
+  } finally {
+    running = false;
+    await refreshQueueCount(userId);
   }
-
-  return { synced: syncedCount, errors: errorCount };
 }

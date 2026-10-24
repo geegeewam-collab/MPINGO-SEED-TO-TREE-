@@ -3,6 +3,7 @@ import { Registry } from '@/components/modules/Registry';
 export default function Page() {
   return (
     <Registry
+      slug="members"
       title="Network Members"
       description="Applications to join the network. Contact details are not shown in this list."
       table="member_applications"

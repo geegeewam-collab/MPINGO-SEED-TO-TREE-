@@ -1,9 +1,11 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+type Filter = [column: string, value: string, op?: 'eq' | 'neq'];
+
 /** Row count for a table, or null if the query failed (for example, no permission). */
-export async function countRows(sb: SupabaseClient, table: string, eq?: [string, string]): Promise<number | null> {
+export async function countRows(sb: SupabaseClient, table: string, ...filters: Filter[]): Promise<number | null> {
   let q = sb.from(table).select('*', { count: 'exact', head: true });
-  if (eq) q = q.eq(eq[0], eq[1]);
+  for (const [col, val, op] of filters) q = op === 'neq' ? q.neq(col, val) : q.eq(col, val);
   const { count, error } = await q;
   return error ? null : count;
 }

@@ -1,19 +1,28 @@
 # Build status (verified against the source, not earlier progress notes)
 
-Last verified: migrations applied and behaviour-tested on a real Postgres (`python supabase/tests/run_tests.py`, 35 checks);
-`tsc`, `next build` pass; lint clean on all files changed in this pass.
+Verified: migrations 0001-0012 applied and behaviour-tested on a real Postgres (`python supabase/tests/run_tests.py`, 83 checks);
+`tsc`, lint (0 errors, 0 warnings) and `next build` pass.
+**Not yet verified:** a live Supabase project, a real browser or phone, live email/SMS providers.
+
+See `docs/ACCESS_MODEL.md` (who sees what) and `docs/LAUNCH_CHECKLIST.md` (setup).
 
 ## Working
-- Database: migrations 0001-0008 apply cleanly. Reference numbers are generated; stock functions are role-checked; survival checks must add up to the number planted and cannot be reviewed by their submitter; verified checks are final; audit trail is written by triggers.
-- Public: `/join` and `/seed-requests/new` save to the database (success is shown only after a successful save). `/trace/[token]` and `/groves/[slug]` read approved summaries through `public_trace` and `public_grove` (no coordinates, no exact collection place, only verified survival results).
-- Staff app: sign-in, role-aware navigation, overview with live counts, read-only registries for every module, survival report from verified checks.
+- **Access:** invitation-only accounts; new accounts see a waiting screen until an admin assigns a role; role-aware menus backed by database rules; admin People and Access screen (change role, pause access, invite by email); last administrator cannot be removed.
+- **Shared with every signed-in person:** network overview with verified survival, directory (approved nurseries and opted-in members), resource library, published groves.
+- **Public:** home page, join and seed request forms (saved, throttled, acknowledgement email if configured), resource library, seed lot QR pages, published groves. No coordinates or personal details.
+- **Records:** create, edit (where the stage allows), detail and status actions for mother trees, seed lots, nurseries, batches, distributions, sites, events, survival checks, groves, resources; stock production/loss; survival review by a different person; request and membership review with email/SMS notification if configured; grove update posts.
+- **Field:** offline-capable Field Entry page for plantings and survival checks (queue on the device, idempotent sync, retry, visible status, installable app with service worker); GPS only on request; site map (planting sites only).
+- **Photo evidence:** photos can be added to plantings and survival checks (private storage, shrunk on the phone before upload, visible only to people who can see the record, locked once a check is verified) and approved photos can be published on sponsor groves.
+- **Reports:** survival from verified checks, CSV download.
+- **Account:** sign-in handled on the server with a login throttle; password reset by email link.
 
 ## Not built yet
-- Create / edit / detail screens for every module (nothing can be added from the interface yet).
-- Verifier review screen; request and membership review actions; role management for admins.
-- Offline capture: `src/lib/offline` exists but nothing calls it; no PWA manifest or service worker; queue needs retry for stuck items and idempotent keys.
-- QR code generation, map, photo upload (Supabase Storage), report export, member directory, password reset page.
-- Public form spam protection beyond a hidden field (add a captcha or rate limit before launch).
+- Photos can only be added while online, after the record is saved. Photos taken offline are not queued.
+- Offline use covers the Field Entry page only; the rest of the app needs a connection.
+- Kiswahili resources: the library supports them, but no content has been loaded. Publish only guidance MRI has reviewed.
+- Spam protection is a hidden field plus a per-connection throttle; add a captcha if abuse appears.
+- Seed lot source trees cannot be changed after creation.
+- Payments: out of scope until MRI agrees who holds the money.
 
-## Known pre-existing lint errors (not touched)
-`src/app/page.tsx`, `src/app/resources/page.tsx`, `src/lib/calculations/survival.ts`, `src/components/ui/Input.tsx`, `src/components/ui/Table.tsx`, `src/lib/offline/db.ts`, `src/lib/offline/sync.ts`.
+## Needs real-world testing
+Offline capture on a real phone; email and SMS with live provider keys; invitation and reset email links with your Supabase templates.

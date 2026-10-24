@@ -1,4 +1,6 @@
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
+import { getModule } from '@/lib/modules';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -19,33 +21,39 @@ function cell(c: Col, r: Row): React.ReactNode {
   return String(v);
 }
 
-export async function Registry({ title, description, table, columns }: { title: string; description: string; table: string; columns: Col[] }) {
+export async function Registry({ slug, title, description, table, columns }: { slug?: string; title: string; description: string; table: string; columns: Col[] }) {
+  const def = slug ? getModule(slug) : undefined;
   const sb = await createClient();
-  const select = Array.from(new Set(columns.flatMap((c) => (c.unit ? [c.key, c.unit] : [c.key])))).join(',');
+  const { data: role } = await sb.rpc('current_app_role');
+  const select = Array.from(new Set(['id', ...columns.flatMap((c) => (c.unit ? [c.key, c.unit] : [c.key]))])).join(',');
   const { data, error } = await sb.from(table).select(select).order('created_at', { ascending: false }).limit(100);
   const rows = (data ?? []) as unknown as Row[];
+  const canCreate = !!def && def.createRoles.includes(String(role ?? ''));
+  const action = canCreate && def ? <Link href={`${def.basePath}/new`} className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">New {def.singular}</Link> : undefined;
 
   return (
     <div>
-      <PageHeader title={title} description={description} />
+      <PageHeader title={title} description={description} actions={action} />
       {error ? (
         <div role="alert" className="rounded-xl border border-error/30 bg-error/5 p-4 text-sm">
           <p className="font-medium text-error">These records could not be loaded.</p>
           <p className="mt-1 text-muted-foreground">Your role may not have access to this table, or the database connection is not configured. Message from the database: {error.message}</p>
         </div>
       ) : rows.length === 0 ? (
-        <EmptyState title="No records yet" body="Nothing has been recorded here, or none of it is visible to your role. This screen is read-only for now; records created elsewhere in the system appear here." />
+        <EmptyState title="No records yet" body={canCreate ? 'Nothing has been recorded here yet. Use the button above to add the first one.' : 'Nothing has been recorded here, or none of it is visible to your role.'} />
       ) : (
         <>
           <div className="overflow-x-auto rounded-xl border bg-surface">
             <table className="w-full text-sm">
-              <thead className="bg-sage/50 text-left text-muted-foreground">
-                <tr>{columns.map((c) => <th key={c.key} scope="col" className="whitespace-nowrap px-4 py-3 font-medium">{c.label}</th>)}</tr>
-              </thead>
+              <thead className="bg-sage/50 text-left text-muted-foreground"><tr>{columns.map((c) => <th key={c.key} scope="col" className="whitespace-nowrap px-4 py-3 font-medium">{c.label}</th>)}</tr></thead>
               <tbody className="divide-y">
                 {rows.map((r, i) => (
                   <tr key={String(r.id ?? i)} className="hover:bg-muted/60">
-                    {columns.map((c) => <td key={c.key} className="whitespace-nowrap px-4 py-3">{cell(c, r)}</td>)}
+                    {columns.map((c, ci) => (
+                      <td key={c.key} className="whitespace-nowrap px-4 py-3">
+                        {ci === 0 && def ? <Link href={`${def.basePath}/${String(r.id)}`} className="font-medium text-primary underline-offset-2 hover:underline">{cell(c, r)}</Link> : cell(c, r)}
+                      </td>
+                    ))}
                   </tr>
                 ))}
               </tbody>

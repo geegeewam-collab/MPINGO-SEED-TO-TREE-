@@ -1,6 +1,9 @@
 'use server';
 import { z } from 'zod';
+import { headers } from 'next/headers';
+import { createHash } from 'node:crypto';
 import { createClient } from '@/lib/supabase/server';
+import { sendEmail } from '@/lib/notify';
 
 export interface FormState { status: 'idle' | 'success' | 'error'; message?: string; fieldErrors?: Record<string, string> }
 
@@ -16,6 +19,7 @@ const memberSchema = z.object({
   location_details: optional(300),
   experience_notes: optional(1000),
   participation_goal: optional(1000),
+  directory_opt_in: z.literal('on').optional(),
   consent: z.literal('on', { error: 'Please confirm that we may store and use your details to review this application' }),
 });
 
@@ -33,6 +37,18 @@ const requestSchema = z.object({
   desired_date: optional(10),
 });
 
+type Db = Awaited<ReturnType<typeof createClient>>;
+// At most five submissions per hour from one connection. The address is stored only as a salted hash.
+async function withinLimit(supabase: Db, kind: string): Promise<boolean> {
+  const h = await headers();
+  const ip = (h.get('x-forwarded-for') ?? '').split(',')[0].trim() || h.get('x-real-ip') || 'unknown';
+  const key = createHash('sha256').update(ip + (process.env.THROTTLE_SALT ?? 'mpingo')).digest('hex');
+  const { data, error } = await supabase.rpc('allow_submission', { p_key: key, p_kind: kind, p_limit: 5, p_window: '1 hour' });
+  if (error) { console.error('throttle check failed', error.code); return true; }
+  return data !== false;
+}
+const TOO_MANY: FormState = { status: 'error', message: 'Too many submissions from your connection. Please try again in an hour.' };
+
 function fieldErrors(error: z.ZodError): Record<string, string> {
   const out: Record<string, string> = {};
   for (const issue of error.issues) {
@@ -49,11 +65,13 @@ export async function submitMembership(_prev: FormState, formData: FormData): Pr
   if (raw.website) return { status: 'success' }; // hidden spam trap: pretend success, store nothing
   const parsed = memberSchema.safeParse(raw);
   if (!parsed.success) return { status: 'error', message: 'Please check the highlighted fields.', fieldErrors: fieldErrors(parsed.error) };
-  const { consent: _consent, ...d } = parsed.data;
+  const { consent: _consent, directory_opt_in, ...d } = parsed.data;
   void _consent;
   const supabase = await createClient();
-  const { error } = await supabase.from('member_applications').insert({ ...d, consent_to_data_handling: true, status: 'pending' });
+  if (!(await withinLimit(supabase, 'join'))) return TOO_MANY;
+  const { error } = await supabase.from('member_applications').insert({ ...d, directory_opt_in: directory_opt_in === 'on', consent_to_data_handling: true, status: 'pending' });
   if (error) { console.error('member application insert failed', error.code); return FAILED; }
+  await sendEmail(d.email, 'We received your application', `Hello ${d.full_name},\n\nThank you for applying to join the Mpingo restoration network. A coordinator will review your application and contact you.\n\nMpingo Restoration Initiative network`);
   return { status: 'success' };
 }
 
@@ -66,7 +84,9 @@ export async function submitSeedRequest(_prev: FormState, formData: FormData): P
   if (d.request_type === 'seedlings' && d.unit !== 'seedlings') return { status: 'error', message: 'Please check the highlighted fields.', fieldErrors: { unit: 'Seedlings are counted in seedlings' } };
   if (d.request_type === 'seeds' && d.unit === 'seedlings') return { status: 'error', message: 'Please check the highlighted fields.', fieldErrors: { unit: 'Seeds are counted in kg or seeds' } };
   const supabase = await createClient();
+  if (!(await withinLimit(supabase, 'request'))) return TOO_MANY;
   const { error } = await supabase.from('seed_requests').insert({ ...d, is_organisation: d.organisation_name !== null, status: 'submitted' });
   if (error) { console.error('seed request insert failed', error.code); return FAILED; }
+  await sendEmail(d.email, 'We received your seed request', `Hello ${d.requester_name},\n\nThank you. We received your request for ${d.requested_quantity} ${d.unit}. A coordinator will check availability and contact you. This is a request, not a confirmed allocation.\n\nMpingo Restoration Initiative network`);
   return { status: 'success' };
 }

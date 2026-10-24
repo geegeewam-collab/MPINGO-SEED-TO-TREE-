@@ -3,6 +3,7 @@ import { Registry } from '@/components/modules/Registry';
 export default function Page() {
   return (
     <Registry
+      slug="survival"
       title="Survival Checks"
       description="Field inspections. Only verified checks count toward reported survival."
       table="survival_checks"

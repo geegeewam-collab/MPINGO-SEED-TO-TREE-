@@ -3,6 +3,7 @@ import { Registry } from '@/components/modules/Registry';
 export default function Page() {
   return (
     <Registry
+      slug="groves"
       title="Sponsor Groves"
       description="Internal view of grove pages. Only published groves are visible to the public."
       table="groves"

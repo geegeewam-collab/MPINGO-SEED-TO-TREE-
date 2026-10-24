@@ -1,5 +1,7 @@
 "use client";
-import { useSyncExternalStore } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
+import Link from 'next/link';
+import { subscribeQueue, getQueueCount, refreshQueueCount } from '@/lib/offline/db';
 import { usePathname } from 'next/navigation';
 import { Menu, Wifi, WifiOff, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -11,9 +13,11 @@ function subscribe(cb: () => void) {
   return () => { window.removeEventListener('online', cb); window.removeEventListener('offline', cb); };
 }
 
-interface HeaderProps { name: string; role: string; onMenu: () => void; onCollapse: () => void }
+interface HeaderProps { name: string; role: string; userId: string; onMenu: () => void; onCollapse: () => void }
 
-export function Header({ name, role, onMenu, onCollapse }: HeaderProps) {
+export function Header({ name, role, userId, onMenu, onCollapse }: HeaderProps) {
+  const waiting = useSyncExternalStore(subscribeQueue, getQueueCount, () => 0);
+  useEffect(() => { void refreshQueueCount(userId); }, [userId]);
   const online = useSyncExternalStore(subscribe, () => navigator.onLine, () => true);
   const here = locate(usePathname());
 
@@ -38,11 +42,12 @@ export function Header({ name, role, onMenu, onCollapse }: HeaderProps) {
           {online ? <Wifi size={12} /> : <WifiOff size={12} />}
           {online ? 'Online' : 'Offline'}
         </span>
+        {waiting > 0 && <Link href="/field" className="rounded-full bg-warning/15 px-2.5 py-1 text-xs font-medium text-warning" role="status">{waiting} waiting to send</Link>}
         <div className="hidden text-right sm:block">
           <p className="text-sm font-medium leading-none">{name}</p>
           <p className="mt-1 text-xs capitalize text-muted-foreground">{role.replace('_', ' ')}</p>
         </div>
-        <form action="/auth/signout" method="post">
+        <form action="/auth/signout" method="post" onSubmit={() => { if ('caches' in window) void caches.delete('mpingo-shell-v1'); }}>
           <button type="submit" className="rounded-lg border px-3 py-1.5 text-sm font-medium hover:bg-accent">Sign out</button>
         </form>
       </div>

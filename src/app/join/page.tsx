@@ -31,6 +31,10 @@ export default function JoinPage() {
         <Field label="Where you would grow or work (optional)" name="location_details" error={e.location_details}><input id="location_details" name="location_details" className={inputClass} /></Field>
         <Field label="Your experience (optional)" name="experience_notes" error={e.experience_notes}><textarea id="experience_notes" name="experience_notes" rows={3} className={inputClass} /></Field>
         <Field label="What you hope to do (optional)" name="participation_goal" error={e.participation_goal}><textarea id="participation_goal" name="participation_goal" rows={3} className={inputClass} /></Field>
+        <label className="flex items-start gap-3 text-sm">
+          <input type="checkbox" name="directory_opt_in" className="mt-1 h-4 w-4" />
+          <span>Optional: list my name, organisation and county in the members&apos; directory that other network members can see. My email and phone are never shown there.</span>
+        </label>
         <div className="space-y-1.5">
           <label className="flex items-start gap-3 text-sm">
             <input type="checkbox" name="consent" className="mt-1 h-4 w-4" aria-invalid={!!e.consent} />

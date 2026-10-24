@@ -3,6 +3,7 @@ import { Registry } from '@/components/modules/Registry';
 export default function Page() {
   return (
     <Registry
+      slug="mother-trees"
       title="Mother Trees"
       description="Registry of source trees. Exact coordinates are private and are not shown here."
       table="mother_trees"

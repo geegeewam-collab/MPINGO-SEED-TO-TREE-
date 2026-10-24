@@ -10,7 +10,7 @@ interface SidebarProps { role: string; collapsed: boolean; open: boolean; onClos
 export function Sidebar({ role, collapsed, open, onClose }: SidebarProps) {
   const path = usePathname();
   const groups = navigation
-    .map((g) => ({ ...g, items: g.items.filter((i) => !i.adminOnly || role === 'admin') }))
+    .map((g) => ({ ...g, items: g.items.filter((i) => !i.roles || i.roles.includes(role)) }))
     .filter((g) => g.items.length > 0);
 
   return (

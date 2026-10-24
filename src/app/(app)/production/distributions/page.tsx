@@ -3,6 +3,7 @@ import { Registry } from '@/components/modules/Registry';
 export default function Page() {
   return (
     <Registry
+      slug="distributions"
       title="Distributions"
       description="Seedling transfers from nurseries to growers."
       table="distributions"
