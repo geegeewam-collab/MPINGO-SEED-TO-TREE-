@@ -4,24 +4,26 @@ import { useActionState } from 'react';
 import { signIn } from '@/app/actions/auth';
 import type { FormState } from '@/app/actions/public';
 import { Field, inputClass } from '@/components/forms/Field';
-import { Rings } from '@/components/brand/Rings';
+import { MriLogo } from '@/components/brand/Logo';
+import { brand } from '@/lib/brand';
 
 export default function LoginPage() {
   const [state, action, pending] = useActionState<FormState, FormData>(signIn, { status: 'idle' });
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
-      <aside className="relative hidden overflow-hidden bg-primary-deep p-12 text-white lg:flex lg:flex-col lg:justify-between">
-        <Rings className="pointer-events-none absolute -right-40 -top-40 h-[40rem] w-[40rem] text-white/10" />
-        <Link href="/" className="relative text-sm font-medium text-white/80 hover:text-white">Mpingo Seed-to-Tree Network</Link>
-        <div className="relative max-w-md">
-          <p className="font-serif text-4xl leading-tight">Every Mpingo, followed from seed to living tree.</p>
-          <p className="mt-4 text-sm text-white/70">Sign in to record, review and report the restoration work.</p>
+      <aside className="hidden bg-primary-deep p-12 text-white lg:flex lg:flex-col lg:justify-between">
+        <Link href="/" className="text-sm font-medium text-white/80 hover:text-white">{brand.name}</Link>
+        <div className="max-w-md">
+          <div className="rounded-3xl bg-parchment p-6"><MriLogo priority className="mx-auto h-auto w-full" /></div>
+          <p className="mt-8 font-serif text-3xl leading-tight">Every Mpingo, followed from seed to living tree.</p>
+          <p className="mt-3 text-sm text-white/80">Sign in to record, review and report the restoration work.</p>
         </div>
+        <p className="text-sm text-white/70">Restoring Mpingo, growing value</p>
       </aside>
       <main className="flex items-center justify-center bg-background p-6">
         <div className="w-full max-w-sm">
           <h1 className="font-serif text-3xl">Sign in</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Staff, growers and partners with an account.</p>
+          <p className="mt-1 text-sm text-muted-foreground">For members and staff. You will go to your own workspace after signing in.</p>
           <form action={action} className="mt-8 space-y-5" noValidate>
             <Field label="Email address" name="email"><input id="email" name="email" type="email" required autoComplete="email" className={inputClass} /></Field>
             <Field label="Password" name="password"><input id="password" name="password" type="password" required autoComplete="current-password" className={inputClass} /></Field>

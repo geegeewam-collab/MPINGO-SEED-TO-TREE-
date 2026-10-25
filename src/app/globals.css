@@ -1,46 +1,51 @@
 @import "tailwindcss";
 
+/* Palette taken from the MRI logo: parchment ground, leaf green, blackwood, and the guitar's amber.
+   --background matches the logo's own parchment so the logo sits on the page without a visible box.
+   Amber is for fills and icons only; use --amber-text for amber-coloured text. */
 :root {
-  --background: #F7F7F1;
-  --foreground: #202923;
-  --primary: #214D38;
+  --background: #ECE3CF;
+  --foreground: #1B1712;
+  --primary: #1F4D1E;
   --primary-foreground: #FFFFFF;
-  --primary-deep: #173B2C;
-  --sage: #E5EDE3;
-  --surface: #FFFFFF;
-  --muted: #EFF2EC;
-  --muted-foreground: #69736C;
-  --accent: #E5EDE3;
-  --accent-foreground: #173B2C;
-  --border: #E0E6DF;
-  --gold: #C3A36A;
-  --success: #287A4B;
-  --warning: #AE772B;
-  --error: #B44343;
-  --text-primary: #202923;
-  --text-secondary: #69736C;
+  --primary-deep: #17351A;
+  --sage: #DDE5CB;
+  --surface: #F7F2E5;
+  --muted: #E2D8C0;
+  --muted-foreground: #5C5142;
+  --accent: #DDE5CB;
+  --accent-foreground: #17351A;
+  --border: #CFC3A8;
+  --gold: #C98A1B;
+  --amber-text: #85500B;
+  --success: #266A3A;
+  --warning: #85500B;
+  --error: #A93A3A;
+  --text-primary: #1B1712;
+  --text-secondary: #5C5142;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #121A16;
-    --foreground: #EAEFE8;
-    --primary: #7FBF99;
-    --primary-foreground: #0F1B15;
-    --primary-deep: #0B1410;
-    --sage: #1D2B24;
-    --surface: #18221D;
-    --muted: #1D2B24;
-    --muted-foreground: #9FAEA4;
-    --accent: #233329;
-    --accent-foreground: #EAEFE8;
-    --border: #2A3A31;
-    --gold: #D2B77F;
-    --success: #6DC28F;
-    --warning: #D9A55B;
-    --error: #E28A8A;
-    --text-primary: #EAEFE8;
-    --text-secondary: #9FAEA4;
+    --background: #16130F;
+    --foreground: #EFE8D8;
+    --primary: #93CE8A;
+    --primary-foreground: #10200F;
+    --primary-deep: #0E170D;
+    --sage: #20291C;
+    --surface: #1F1B15;
+    --muted: #2A251D;
+    --muted-foreground: #B3A793;
+    --accent: #26301F;
+    --accent-foreground: #EFE8D8;
+    --border: #3A3328;
+    --gold: #D9A441;
+    --amber-text: #E0B060;
+    --success: #7FCB91;
+    --warning: #E0B060;
+    --error: #E59090;
+    --text-primary: #EFE8D8;
+    --text-secondary: #B3A793;
   }
 }
 
@@ -57,12 +62,15 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-border: var(--border);
+  --color-parchment: #ECE3CF;
   --color-gold: var(--gold);
+  --color-amber-text: var(--amber-text);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-error: var(--error);
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
+  --font-serif: Georgia, "Iowan Old Style", "Palatino Linotype", Palatino, "Times New Roman", serif;
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 

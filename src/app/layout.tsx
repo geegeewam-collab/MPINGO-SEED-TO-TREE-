@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Mpingo Seed-to-Tree Network",
-  description: "Provenance and Restoration Management System",
+  title: { default: "Mpingo Restoration Initiative", template: "%s | Mpingo Restoration Initiative" },
+  description: "Restoring Mpingo, growing value. Follow every Mpingo from seed to living tree.",
   manifest: "/manifest.webmanifest",
+  other: { "theme-color": "#1F4D1E" },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

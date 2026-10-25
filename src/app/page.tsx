@@ -1,83 +1,188 @@
 import Link from 'next/link';
-import { Rings } from '@/components/brand/Rings';
+import { cookies } from 'next/headers';
+import { ArrowRight, BookOpen, ClipboardCheck, EyeOff, Leaf, MapPin, ShieldCheck, Sprout, Truck, TreeDeciduous, CircleHelp } from 'lucide-react';
+import { MriLogo } from '@/components/brand/Logo';
+import { PublicShell } from '@/components/layout/PublicChrome';
+import { brand, whatsappLink } from '@/lib/brand';
+import { copy, type Lang } from '@/lib/i18n';
+import { createClient } from '@/lib/supabase/server';
 
-const STAGES = [
-  ['Seed', 'Mother trees are registered and every seed lot records which trees it came from.'],
-  ['Nursery', 'Batches are sown, counted and tracked, so stock is never a guess.'],
-  ['Distribution', 'Seedlings leave a nursery only through an approved, recorded transfer.'],
-  ['Planting', 'Growers record where and when trees go in the ground.'],
-  ['Survival', 'Field checks are reviewed by a second person before any result is published.'],
-];
+export const instant = false;
 
-const btn = 'inline-flex items-center rounded-lg px-5 py-3 text-sm font-medium transition-colors';
+interface Summary { mother_trees: number | null; seedlings_distributed: number | null; trees_planted: number | null; survival_percent: number | null }
 
-export default function Home() {
+const btn = 'inline-flex items-center justify-center rounded-lg px-5 py-3 text-sm font-semibold transition-colors';
+const primary = `${btn} bg-primary text-primary-foreground hover:opacity-90`;
+const outlined = `${btn} border border-primary text-primary hover:bg-accent`;
+
+const STEP_ICONS = [Sprout, Leaf, Truck, MapPin, ClipboardCheck];
+const TRUST_ICONS = [ShieldCheck, CircleHelp, EyeOff];
+const WHO_ICONS = [Sprout, Leaf, MapPin, TreeDeciduous];
+
+async function load() {
+  try {
+    const sb = await createClient();
+    const [summary, guides] = await Promise.all([
+      sb.rpc('public_summary'),
+      sb.from('resources').select('id', { count: 'exact', head: true }).eq('approval_status', 'approved'),
+    ]);
+    return { summary: (summary.data ?? null) as Summary | null, guides: guides.count ?? 0 };
+  } catch {
+    return { summary: null, guides: 0 };
+  }
+}
+
+export default async function Home() {
+  const lang: Lang = (await cookies()).get('lang')?.value === 'sw' ? 'sw' : 'en';
+  const t = copy[lang];
+  const { summary, guides } = await load();
+  const nf = new Intl.NumberFormat(lang === 'sw' ? 'sw-KE' : 'en-GB');
+  const figures: (string | null)[] = [
+    summary?.mother_trees != null ? nf.format(summary.mother_trees) : null,
+    summary?.seedlings_distributed != null ? nf.format(summary.seedlings_distributed) : null,
+    summary?.trees_planted != null ? nf.format(summary.trees_planted) : null,
+    summary?.survival_percent != null ? `${summary.survival_percent}%` : null,
+  ];
+  const talk = whatsappLink('Hello, I would like to talk about sponsoring a grove.') || (brand.email ? `mailto:${brand.email}` : '');
+
   return (
-    <div className="min-h-screen bg-background">
-      <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">
-        <span className="font-serif text-xl">Mpingo Seed-to-Tree Network</span>
-        <nav aria-label="Main" className="flex items-center gap-5 text-sm">
-          <Link href="/resources" className="hidden text-muted-foreground hover:text-foreground sm:inline">Resources</Link>
-          <Link href="/join" className="hidden text-muted-foreground hover:text-foreground sm:inline">Join</Link>
-          <Link href="/login" className="rounded-lg border px-4 py-2 font-medium hover:bg-accent">Sign in</Link>
-        </nav>
-      </header>
-
+    <PublicShell lang={lang}>
       <main>
-        <section className="relative mx-auto max-w-6xl overflow-hidden px-5 pb-20 pt-12 sm:pt-20">
-          <Rings className="pointer-events-none absolute -right-32 -top-24 h-[34rem] w-[34rem] text-primary/10" />
-          <div className="relative max-w-2xl">
-            <h1 className="font-serif text-5xl leading-[1.05] tracking-tight sm:text-6xl">Follow every Mpingo from seed to living tree.</h1>
-            <p className="mt-6 max-w-xl text-lg text-muted-foreground">A shared record for the people restoring African blackwood in Kenya: where seed comes from, how nurseries grow it, where it is planted, and whether it survives.</p>
+        <section className="mx-auto grid max-w-6xl items-center gap-10 px-5 pb-16 pt-10 md:grid-cols-[1.15fr_1fr] md:pt-16">
+          <div>
+            <p className="font-serif text-lg italic text-primary">{t.tagline}</p>
+            <h1 className="mt-3 font-serif text-4xl leading-[1.08] tracking-tight sm:text-5xl lg:text-6xl">{t.hero.title}</h1>
+            <p className="mt-6 max-w-xl text-lg text-muted-foreground">{t.hero.body}</p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link href="/join" className={`${btn} bg-primary text-primary-foreground hover:opacity-90`}>Join the network</Link>
-              <Link href="/seed-requests/new" className={`${btn} border hover:bg-accent`}>Request seed or seedlings</Link>
+              <Link href="/join" className={primary}>{t.hero.join}</Link>
+              <Link href="/seed-requests/new" className={outlined}>{t.hero.request}</Link>
+            </div>
+          </div>
+          <div className="mx-auto w-full max-w-md md:max-w-none">
+            <MriLogo priority alt={t.hero.logoAlt} className="h-auto w-full" />
+          </div>
+        </section>
+
+        <section aria-labelledby="who" className="mx-auto max-w-6xl px-5 pb-16">
+          <h2 id="who" className="font-serif text-2xl sm:text-3xl">{t.who.title}</h2>
+          <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {t.who.items.map(([title, body, href], i) => {
+              const Icon = WHO_ICONS[i];
+              return (
+                <li key={title}>
+                  <Link href={href} className="group flex h-full flex-col rounded-2xl border bg-surface p-5 transition-colors hover:border-primary">
+                    <Icon size={26} className="text-primary" aria-hidden="true" />
+                    <span className="mt-4 text-lg font-semibold">{title}</span>
+                    <span className="mt-1 flex-1 text-sm text-muted-foreground">{body}</span>
+                    <ArrowRight size={18} className="mt-4 text-primary transition-transform group-hover:translate-x-1" aria-hidden="true" />
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+
+        <section aria-labelledby="numbers" className="border-y bg-surface">
+          <div className="mx-auto max-w-6xl px-5 py-12">
+            <h2 id="numbers" className="font-serif text-2xl sm:text-3xl">{t.numbers.title}</h2>
+            <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-8 lg:grid-cols-4">
+              {t.numbers.items.map((label, i) => (
+                <div key={label} className="border-l-4 border-gold pl-4">
+                  <dd className={figures[i] ? 'font-serif text-4xl' : 'text-base font-semibold text-amber-text'}>{figures[i] ?? t.numbers.awaiting}</dd>
+                  <dt className="mt-1 text-sm text-muted-foreground">{label}</dt>
+                </div>
+              ))}
+            </dl>
+            <p className="mt-6 text-sm text-muted-foreground">{t.numbers.note}</p>
+          </div>
+        </section>
+
+        <section id="journey" aria-labelledby="journey-title" className="mx-auto max-w-6xl scroll-mt-20 px-5 py-16">
+          <h2 id="journey-title" className="font-serif text-2xl sm:text-3xl">{t.journey.title}</h2>
+          <ol className="relative mt-10 grid gap-8 md:grid-cols-5">
+            <span aria-hidden="true" className="absolute left-0 right-0 top-7 hidden h-px bg-border md:block" />
+            {t.journey.steps.map(([title, body], i) => {
+              const Icon = STEP_ICONS[i];
+              return (
+                <li key={title} className="relative">
+                  <span className="relative flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground"><Icon size={24} aria-hidden="true" /></span>
+                  <h3 className="mt-4 text-lg font-semibold"><span className="sr-only">{i + 1}. </span>{title}</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">{body}</p>
+                </li>
+              );
+            })}
+          </ol>
+          <p className="mt-8"><Link href="/resources" className="inline-flex items-center gap-1 font-semibold text-primary hover:underline">{t.journey.read}<ArrowRight size={16} aria-hidden="true" /></Link></p>
+        </section>
+
+        <section aria-labelledby="trust" className="border-y bg-surface">
+          <div className="mx-auto max-w-6xl px-5 py-16">
+            <h2 id="trust" className="font-serif text-2xl sm:text-3xl">{t.trust.title}</h2>
+            <div className="mt-8 grid gap-6 md:grid-cols-3">
+              {t.trust.items.map(([title, body], i) => {
+                const Icon = TRUST_ICONS[i];
+                return (
+                  <div key={title} className="rounded-2xl border bg-background p-6">
+                    <Icon size={24} className="text-primary" aria-hidden="true" />
+                    <h3 className="mt-3 text-lg font-semibold">{title}</h3>
+                    <p className="mt-2 text-sm text-muted-foreground">{body}</p>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="mt-6"><Link href="/verification" className="inline-flex items-center gap-1 font-semibold text-primary hover:underline">{t.trust.link}<ArrowRight size={16} aria-hidden="true" /></Link></p>
+          </div>
+        </section>
+
+        <section aria-labelledby="library" className="mx-auto max-w-6xl px-5 py-16">
+          <div className="flex flex-wrap items-center justify-between gap-5 rounded-2xl bg-primary-deep p-8 text-white">
+            <div className="max-w-xl">
+              <BookOpen size={26} aria-hidden="true" className="text-gold" />
+              <h2 id="library" className="mt-3 font-serif text-2xl">{t.library.title}</h2>
+              <p className="mt-1 text-sm text-white/80">{t.library.body}</p>
+              <p className="mt-3 flex flex-wrap items-center gap-2 text-xs font-semibold">
+                <span className="rounded-full bg-white/15 px-2.5 py-1">EN</span>
+                <span className="rounded-full bg-white/15 px-2.5 py-1">SW</span>
+                {guides > 0 && <span className="text-white/80">{guides} {lang === 'sw' ? 'miongozo' : guides === 1 ? 'guide' : 'guides'}</span>}
+              </p>
+            </div>
+            <Link href="/resources" className="rounded-lg bg-white px-5 py-3 text-sm font-semibold text-primary-deep hover:bg-white/90">{t.library.cta}</Link>
+          </div>
+        </section>
+
+        <section id="about" aria-labelledby="about-title" className="border-y bg-surface scroll-mt-20">
+          <div className="mx-auto grid max-w-6xl gap-8 px-5 py-16 md:grid-cols-[1fr_2fr]">
+            <h2 id="about-title" className="font-serif text-2xl sm:text-3xl">{t.about.title}</h2>
+            <p className="max-w-2xl text-lg leading-relaxed">{t.about.body}</p>
+          </div>
+        </section>
+
+        <section id="sponsor" aria-labelledby="sponsor-title" className="mx-auto max-w-6xl scroll-mt-20 px-5 py-16">
+          <div className="grid gap-6 md:grid-cols-[2fr_1fr] md:items-center">
+            <div>
+              <h2 id="sponsor-title" className="font-serif text-2xl sm:text-3xl">{t.sponsor.title}</h2>
+              <p className="mt-3 max-w-2xl text-lg text-muted-foreground">{t.sponsor.body}</p>
+            </div>
+            <div>
+              {talk
+                ? <a href={talk} target={talk.startsWith('http') ? '_blank' : undefined} rel="noopener noreferrer" className={primary}>{t.sponsor.cta}</a>
+                : <Link href="/join" className={primary}>{t.sponsor.fallback}</Link>}
             </div>
           </div>
         </section>
 
-        <section aria-labelledby="journey" className="border-y bg-surface">
-          <div className="mx-auto max-w-6xl px-5 py-16">
-            <h2 id="journey" className="font-serif text-3xl">One connected journey</h2>
-            <ol className="mt-10 grid gap-8 md:grid-cols-5">
-              {STAGES.map(([t, d], i) => (
-                <li key={t} className="relative">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground" aria-hidden="true">{i + 1}</span>
-                  <h3 className="mt-4 font-semibold">{t}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">{d}</p>
-                </li>
-              ))}
-            </ol>
-          </div>
-        </section>
-
-        <section aria-labelledby="trust" className="mx-auto max-w-6xl px-5 py-16">
-          <h2 id="trust" className="font-serif text-3xl">Results you can check</h2>
-          <div className="mt-8 grid gap-6 md:grid-cols-3">
-            {[
-              ['Verified, not claimed', 'A survival figure is published only after a second person has reviewed the field check.'],
-              ['Honest about the unknown', 'Trees that could not be confirmed are never counted as alive or dead.'],
-              ['Locations stay protected', 'Exact positions of mother trees and planting sites are private. Public pages show an approved summary only.'],
-            ].map(([t, d]) => (
-              <div key={t} className="rounded-2xl border bg-surface p-6"><h3 className="font-semibold">{t}</h3><p className="mt-2 text-sm text-muted-foreground">{d}</p></div>
+        <section aria-labelledby="faq" className="mx-auto max-w-3xl px-5 pb-20">
+          <h2 id="faq" className="font-serif text-2xl sm:text-3xl">{t.faq.title}</h2>
+          <div className="mt-6 divide-y rounded-2xl border bg-surface">
+            {t.faq.items.map(([q, a]) => (
+              <details key={q} className="group px-5 py-4">
+                <summary className="cursor-pointer list-none font-semibold marker:content-none">{q}</summary>
+                <p className="mt-2 text-muted-foreground">{a}</p>
+              </details>
             ))}
           </div>
         </section>
-
-        <section className="mx-auto max-w-6xl px-5 pb-20">
-          <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-primary-deep p-8 text-white">
-            <div><h2 className="font-serif text-2xl">Learn how to collect, grow and plant Mpingo</h2><p className="mt-1 text-sm text-white/70">Guides published by the network team, in English and Kiswahili.</p></div>
-            <Link href="/resources" className="rounded-lg bg-white px-5 py-3 text-sm font-medium text-primary-deep hover:bg-white/90">Open the library</Link>
-          </div>
-        </section>
       </main>
-
-      <footer className="border-t">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-6 text-sm text-muted-foreground">
-          <span>Mpingo Seed-to-Tree Network</span>
-          <span className="flex gap-5"><Link href="/join" className="hover:text-foreground">Join</Link><Link href="/seed-requests/new" className="hover:text-foreground">Request seed</Link><Link href="/login" className="hover:text-foreground">Staff sign in</Link></span>
-        </div>
-      </footer>
-    </div>
+    </PublicShell>
   );
 }

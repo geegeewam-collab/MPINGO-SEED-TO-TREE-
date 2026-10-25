@@ -2,6 +2,8 @@ import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { calculateSurvivalMetrics } from '@/lib/calculations/survival';
 import { fmtPct } from '@/lib/queries';
+import { PublicShell } from '@/components/layout/PublicChrome';
+import { brand } from '@/lib/brand';
 
 export const instant = false;
 
@@ -24,11 +26,12 @@ export default async function GrovePage({ params }: { params: Promise<{ slug: st
   const m = ck && g.planting ? calculateSurvivalMetrics(g.planting.quantity, ck.alive, ck.dead, ck.unresolved, ck.uninspected) : null;
 
   return (
-    <main className="min-h-screen bg-background px-4 py-12 sm:py-16">
+    <PublicShell>
+    <main className="px-4 py-12 sm:py-16">
       <div className="mx-auto max-w-3xl space-y-10">
         <header>
-          {g.sponsor_name && <p className="text-sm text-muted-foreground">Supported by {g.sponsor_name}</p>}
-          <h1 className="mt-1 text-4xl font-semibold tracking-tight">{g.title}</h1>
+          <p className="text-sm text-muted-foreground">{brand.name} grove{g.sponsor_name ? `, supported by ${g.sponsor_name}` : ''}</p>
+          <h1 className="mt-1 font-serif text-4xl">{g.title}</h1>
           {g.description && <p className="mt-3 max-w-2xl text-muted-foreground">{g.description}</p>}
         </header>
 
@@ -83,5 +86,6 @@ export default async function GrovePage({ params }: { params: Promise<{ slug: st
         )}
       </div>
     </main>
+    </PublicShell>
   );
 }

@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { navigation } from './nav';
+import { MriBadge } from '@/components/brand/Logo';
 
 interface SidebarProps { role: string; collapsed: boolean; open: boolean; onClose: () => void }
 
@@ -26,10 +27,10 @@ export function Sidebar({ role, collapsed, open, onClose }: SidebarProps) {
       >
         <div className="flex h-16 shrink-0 items-center justify-between border-b px-4">
           <Link href="/dashboard" className="flex items-center gap-3" onClick={onClose}>
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">M</span>
+            <MriBadge size={36} className="shrink-0" />
             <span className={cn('leading-tight', collapsed && 'lg:hidden')}>
-              <span className="block text-sm font-semibold">Mpingo OS</span>
-              <span className="block text-xs text-muted-foreground">Seed to Tree</span>
+              <span className="block text-sm font-semibold">Mpingo Restoration Initiative</span>
+              <span className="block text-xs text-muted-foreground">Seed-to-Tree Network</span>
             </span>
           </Link>
           <button onClick={onClose} className="rounded-md p-2 text-muted-foreground hover:bg-accent lg:hidden" aria-label="Close menu">

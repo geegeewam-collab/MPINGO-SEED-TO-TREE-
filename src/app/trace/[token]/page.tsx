@@ -1,6 +1,8 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { StatusBadge } from '@/components/ui/StatusBadge';
+import { PublicShell } from '@/components/layout/PublicChrome';
+import { brand } from '@/lib/brand';
 
 export const instant = false;
 
@@ -25,10 +27,11 @@ export default async function PublicTracePage({ params }: { params: Promise<{ to
     ['Status', <StatusBadge key="s" value={lot.status} />],
   ];
   return (
-    <main className="min-h-screen bg-background px-4 py-12">
+    <PublicShell mobileBar={false}>
+    <main className="px-4 py-12">
       <div className="mx-auto max-w-xl">
-        <p className="text-sm text-muted-foreground">Mpingo seed lot record</p>
-        <h1 className="mt-1 text-3xl font-semibold tracking-tight">{lot.reference}</h1>
+        <p className="text-sm text-muted-foreground">{brand.name}: seed lot record</p>
+        <h1 className="mt-1 font-serif text-3xl">{lot.reference}</h1>
         <dl className="mt-8 divide-y rounded-2xl border bg-surface">
           {rows.map(([k, v]) => (
             <div key={k} className="flex items-center justify-between gap-4 px-5 py-3.5 text-sm"><dt className="text-muted-foreground">{k}</dt><dd className="text-right font-medium">{v}</dd></div>
@@ -37,5 +40,6 @@ export default async function PublicTracePage({ params }: { params: Promise<{ to
         <p className="mt-4 text-xs text-muted-foreground">This page shows the approved public summary of the record. Exact collection places are not published.</p>
       </div>
     </main>
+    </PublicShell>
   );
 }
