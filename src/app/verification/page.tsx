@@ -23,7 +23,6 @@ export default async function VerificationPage() {
             </li>
           ))}
         </ol>
-        <p className="mt-10 rounded-2xl border bg-surface p-5">{v.unknown}</p>
         <p className="mt-8"><Link href="/" className="font-semibold text-primary hover:underline">{v.back}</Link></p>
       </main>
     </PublicShell>

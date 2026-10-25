@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { cookies } from 'next/headers';
-import { ArrowRight, BookOpen, ClipboardCheck, EyeOff, Leaf, MapPin, ShieldCheck, Sprout, Truck, TreeDeciduous, CircleHelp } from 'lucide-react';
+import { ArrowRight, BookOpen, ClipboardCheck, EyeOff, Leaf, MapPin, ShieldCheck, Sprout, Truck, TreeDeciduous } from 'lucide-react';
 import { MriLogo } from '@/components/brand/Logo';
 import { PublicShell } from '@/components/layout/PublicChrome';
 import { brand, whatsappLink } from '@/lib/brand';
@@ -9,40 +9,28 @@ import { createClient } from '@/lib/supabase/server';
 
 export const instant = false;
 
-interface Summary { mother_trees: number | null; seedlings_distributed: number | null; trees_planted: number | null; survival_percent: number | null }
-
 const btn = 'inline-flex items-center justify-center rounded-lg px-5 py-3 text-sm font-semibold transition-colors';
 const primary = `${btn} bg-primary text-primary-foreground hover:opacity-90`;
 const outlined = `${btn} border border-primary text-primary hover:bg-accent`;
 
 const STEP_ICONS = [Sprout, Leaf, Truck, MapPin, ClipboardCheck];
-const TRUST_ICONS = [ShieldCheck, CircleHelp, EyeOff];
+const TRUST_ICONS = [ShieldCheck, EyeOff];
 const WHO_ICONS = [Sprout, Leaf, MapPin, TreeDeciduous];
 
 async function load() {
   try {
     const sb = await createClient();
-    const [summary, guides] = await Promise.all([
-      sb.rpc('public_summary'),
-      sb.from('resources').select('id', { count: 'exact', head: true }).eq('approval_status', 'approved'),
-    ]);
-    return { summary: (summary.data ?? null) as Summary | null, guides: guides.count ?? 0 };
+    const guides = await sb.from('resources').select('id', { count: 'exact', head: true }).eq('approval_status', 'approved');
+    return { guides: guides.count ?? 0 };
   } catch {
-    return { summary: null, guides: 0 };
+    return { guides: 0 };
   }
 }
 
 export default async function Home() {
   const lang: Lang = (await cookies()).get('lang')?.value === 'sw' ? 'sw' : 'en';
   const t = copy[lang];
-  const { summary, guides } = await load();
-  const nf = new Intl.NumberFormat(lang === 'sw' ? 'sw-KE' : 'en-GB');
-  const figures: (string | null)[] = [
-    summary?.mother_trees != null ? nf.format(summary.mother_trees) : null,
-    summary?.seedlings_distributed != null ? nf.format(summary.seedlings_distributed) : null,
-    summary?.trees_planted != null ? nf.format(summary.trees_planted) : null,
-    summary?.survival_percent != null ? `${summary.survival_percent}%` : null,
-  ];
+  const { guides } = await load();
   const talk = whatsappLink('Hello, I would like to talk about sponsoring a grove.') || (brand.email ? `mailto:${brand.email}` : '');
 
   return (
@@ -82,21 +70,6 @@ export default async function Home() {
           </ul>
         </section>
 
-        <section aria-labelledby="numbers" className="border-y bg-surface">
-          <div className="mx-auto max-w-6xl px-5 py-12">
-            <h2 id="numbers" className="font-serif text-2xl sm:text-3xl">{t.numbers.title}</h2>
-            <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-8 lg:grid-cols-4">
-              {t.numbers.items.map((label, i) => (
-                <div key={label} className="border-l-4 border-gold pl-4">
-                  <dd className={figures[i] ? 'font-serif text-4xl' : 'text-base font-semibold text-amber-text'}>{figures[i] ?? t.numbers.awaiting}</dd>
-                  <dt className="mt-1 text-sm text-muted-foreground">{label}</dt>
-                </div>
-              ))}
-            </dl>
-            <p className="mt-6 text-sm text-muted-foreground">{t.numbers.note}</p>
-          </div>
-        </section>
-
         <section id="journey" aria-labelledby="journey-title" className="mx-auto max-w-6xl scroll-mt-20 px-5 py-16">
           <h2 id="journey-title" className="font-serif text-2xl sm:text-3xl">{t.journey.title}</h2>
           <ol className="relative mt-10 grid gap-8 md:grid-cols-5">
@@ -118,7 +91,7 @@ export default async function Home() {
         <section aria-labelledby="trust" className="border-y bg-surface">
           <div className="mx-auto max-w-6xl px-5 py-16">
             <h2 id="trust" className="font-serif text-2xl sm:text-3xl">{t.trust.title}</h2>
-            <div className="mt-8 grid gap-6 md:grid-cols-3">
+            <div className="mt-8 grid gap-6 md:grid-cols-2">
               {t.trust.items.map(([title, body], i) => {
                 const Icon = TRUST_ICONS[i];
                 return (

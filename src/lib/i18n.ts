@@ -40,7 +40,6 @@ const en = {
     title: 'Results you can check',
     items: [
       ['Verified, not claimed', 'A survival figure is published only after a second person has reviewed the field check.'],
-      ['Honest about the unknown', 'Trees that could not be confirmed are never counted as alive or dead.'],
       ['Locations stay protected', 'Exact positions of mother trees and planting sites are private. Public pages show an approved summary only.'],
     ],
     link: 'How verification works',
@@ -52,7 +51,7 @@ const en = {
   },
   sponsor: {
     title: 'Sponsor a grove',
-    body: 'A sponsored grove gets its own public page with the planting record and survival results that a second person has verified. Get in touch to talk about sponsoring one.',
+    body: 'Fund the planting of a grove of mpingo and follow it from planting to verified survival. Message us on WhatsApp to talk it through.',
     cta: 'Talk to us', fallback: 'Join the network',
   },
   faq: {
@@ -73,7 +72,6 @@ const en = {
       ['A second person reviews it', 'A verifier who did not submit the check reviews it. Nobody can review their own submission, and the counts must add up to the number planted.'],
       ['Only then is it published', 'Once verified, a check cannot be changed. Public pages show the verified result and the date of the field check.'],
     ],
-    unknown: 'Trees that could not be confirmed are shown separately. They are never counted as alive or dead.',
     back: 'Back to home',
   },
 };
@@ -117,7 +115,6 @@ const sw: typeof en = {
     title: 'Matokeo unayoweza kuyahakiki',
     items: [
       ['Yamethibitishwa, si madai', 'Takwimu ya uhai huchapishwa tu baada ya mtu wa pili kupitia ukaguzi wa shambani.'],
-      ['Tunakiri tusiyojua', 'Miti isiyoweza kuthibitishwa haihesabiwi kuwa hai wala imekufa.'],
       ['Maeneo yanalindwa', 'Mahali kamili pa miti mama na mashamba ya kupanda ni siri. Kurasa za umma zinaonyesha muhtasari ulioidhinishwa tu.'],
     ],
     link: 'Uthibitisho unavyofanya kazi',
@@ -129,7 +126,7 @@ const sw: typeof en = {
   },
   sponsor: {
     title: 'Fadhili shamba la miti',
-    body: 'Shamba la miti lililofadhiliwa hupata ukurasa wake wa umma wenye rekodi ya upandaji na matokeo ya uhai yaliyothibitishwa na mtu wa pili. Wasiliana nasi kuzungumzia kufadhili.',
+    body: 'Fadhili upandaji wa shamba la miti ya mpingo na ufuatilie kuanzia kupanda hadi uhai uliothibitishwa. Tuandikie kwenye WhatsApp tuzungumze.',
     cta: 'Zungumza nasi', fallback: 'Jiunge na mtandao',
   },
   faq: {
@@ -150,7 +147,6 @@ const sw: typeof en = {
       ['Mtu wa pili anaupitia', 'Mthibitishaji ambaye hakuwasilisha ukaguzi huo anaupitia. Hakuna anayeweza kupitia aliyowasilisha mwenyewe, na jumla lazima ilingane na idadi iliyopandwa.'],
       ['Ndipo unachapishwa', 'Ukishathibitishwa, ukaguzi hauwezi kubadilishwa. Kurasa za umma zinaonyesha matokeo yaliyothibitishwa na tarehe ya ukaguzi.'],
     ],
-    unknown: 'Miti isiyoweza kuthibitishwa inaonyeshwa kando. Haihesabiwi kuwa hai wala imekufa.',
     back: 'Rudi mwanzo',
   },
 };

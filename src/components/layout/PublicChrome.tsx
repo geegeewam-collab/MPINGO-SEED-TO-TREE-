@@ -27,7 +27,7 @@ export function PublicHeader({ lang: initial }: { lang?: Lang }) {
   const t = copy[lang].nav;
   const link = 'text-foreground hover:underline underline-offset-4';
   return (
-    <header className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur">
+    <header className="sticky top-0 z-30 border-b bg-background">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3">
         <Link href="/" className="flex min-w-0 items-center gap-3">
           <MriBadge size={40} />
