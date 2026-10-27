@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next';
-import { isPrototype } from '@/components/layout/PrototypeNotice';
+import { isPrototype } from '@/lib/prototype';
 
 // While the site is a prototype, ask search engines not to list it. Once NEXT_PUBLIC_PROTOTYPE_MODE=off, everything public is allowed.
 export default function robots(): MetadataRoute.Robots {

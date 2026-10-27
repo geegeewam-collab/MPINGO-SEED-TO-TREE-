@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { isPrototype } from "@/components/layout/PrototypeNotice";
+import { isPrototype } from "@/lib/prototype";
 
 export const metadata: Metadata = {
   title: { default: "Mpingo Restoration Initiative", template: "%s | Mpingo Restoration Initiative" },

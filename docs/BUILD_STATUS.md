@@ -8,7 +8,8 @@ Verified: migrations 0001-0012 applied and behaviour-tested on a real Postgres (
 - Migration `0014_seedlings_produced.sql`: recording production now also raises "Seedlings produced" (it stayed at 0 before), and existing batches are backfilled. `run_tests.py` has three new checks for it (86 in total). Run the tests before relying on it.
 - Site map: colour now depends on how much of the site was assessed (grey below 50%, a placeholder for MRI to set), and each pop-up shows all three survival measures.
 - `src/proxy.ts`: refreshes Supabase sign-in sessions so long sessions are not cut off. Test by staying signed in for over an hour.
-- Prototype notice and search-engine blocking, on by default. Set `NEXT_PUBLIC_PROTOTYPE_MODE=off` only after MRI approves a real launch.
+- Search engines are asked not to list the site while it is a prototype (nothing is shown on the page). Set `NEXT_PUBLIC_PROTOTYPE_MODE=off` only after MRI approves a real launch.
+- The site always uses the light palette. The dark palette in `globals.css` now applies only if the page has `data-theme="dark"`, instead of following the device's dark mode.
 - Please run `npm run build` and lint before deploying these changes.
 
 See `docs/ACCESS_MODEL.md` (who sees what) and `docs/LAUNCH_CHECKLIST.md` (setup).

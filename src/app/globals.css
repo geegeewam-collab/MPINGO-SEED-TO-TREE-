@@ -4,6 +4,7 @@
    --background matches the logo's own parchment so the logo sits on the page without a visible box.
    Amber is for fills and icons only; use --amber-text for amber-coloured text. */
 :root {
+  color-scheme: light;
   --background: #ECE3CF;
   --foreground: #1B1712;
   --primary: #1F4D1E;
@@ -25,28 +26,29 @@
   --text-secondary: #5C5142;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #16130F;
-    --foreground: #EFE8D8;
-    --primary: #93CE8A;
-    --primary-foreground: #10200F;
-    --primary-deep: #0E170D;
-    --sage: #20291C;
-    --surface: #1F1B15;
-    --muted: #2A251D;
-    --muted-foreground: #B3A793;
-    --accent: #26301F;
-    --accent-foreground: #EFE8D8;
-    --border: #3A3328;
-    --gold: #D9A441;
-    --amber-text: #E0B060;
-    --success: #7FCB91;
-    --warning: #E0B060;
-    --error: #E59090;
-    --text-primary: #EFE8D8;
-    --text-secondary: #B3A793;
-  }
+/* The site always uses the light palette above. This dark palette is kept for later and only applies
+   if the page is given data-theme="dark"; it no longer switches on by itself with the device's dark mode. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #16130F;
+  --foreground: #EFE8D8;
+  --primary: #93CE8A;
+  --primary-foreground: #10200F;
+  --primary-deep: #0E170D;
+  --sage: #20291C;
+  --surface: #1F1B15;
+  --muted: #2A251D;
+  --muted-foreground: #B3A793;
+  --accent: #26301F;
+  --accent-foreground: #EFE8D8;
+  --border: #3A3328;
+  --gold: #D9A441;
+  --amber-text: #E0B060;
+  --success: #7FCB91;
+  --warning: #E0B060;
+  --error: #E59090;
+  --text-primary: #EFE8D8;
+  --text-secondary: #B3A793;
 }
 
 @theme inline {
