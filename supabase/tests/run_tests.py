@@ -50,6 +50,9 @@ user(OP);    check('dispatch cannot run twice', lambda: q("select dispatch_nurse
 user(OP);    check('negative loss refused', lambda: q("select record_nursery_loss(%s,-50,%s)",batch,OP), 'greater than zero')
 user(OP);    check('loss larger than stock refused', lambda: q("select record_nursery_loss(%s,9999,%s)",batch,OP), 'greater than current stock')
 user(OP);    check('valid loss recorded', lambda: q("select record_nursery_loss(%s,50,%s)",batch,OP)[0][0] is True)
+user(OP);    check('zero production refused', lambda: q("select record_nursery_production(%s,0,%s)",batch,OP), 'greater than zero')
+user(OP);    check('production is recorded', lambda: q("select record_nursery_production(%s,200,%s)",batch,OP)[0][0] is True)
+su(cur);     check('production raises stock and seedlings produced; loss and dispatch do not change seedlings produced', lambda: q("select seedlings_produced, current_stock from nursery_batches where id=%s",batch)[0]==(200,550))
 
 # --- public forms
 user(None,'anon')

@@ -4,6 +4,13 @@ Verified: migrations 0001-0012 applied and behaviour-tested on a real Postgres (
 `tsc`, lint (0 errors, 0 warnings) and `next build` pass.
 **Not yet verified:** a live Supabase project, a real browser or phone, live email/SMS providers.
 
+**Changes since the verified run (written but NOT yet run or built):**
+- Migration `0014_seedlings_produced.sql`: recording production now also raises "Seedlings produced" (it stayed at 0 before), and existing batches are backfilled. `run_tests.py` has three new checks for it (86 in total). Run the tests before relying on it.
+- Site map: colour now depends on how much of the site was assessed (grey below 50%, a placeholder for MRI to set), and each pop-up shows all three survival measures.
+- `src/proxy.ts`: refreshes Supabase sign-in sessions so long sessions are not cut off. Test by staying signed in for over an hour.
+- Prototype notice and search-engine blocking, on by default. Set `NEXT_PUBLIC_PROTOTYPE_MODE=off` only after MRI approves a real launch.
+- Please run `npm run build` and lint before deploying these changes.
+
 See `docs/ACCESS_MODEL.md` (who sees what) and `docs/LAUNCH_CHECKLIST.md` (setup).
 
 ## Working

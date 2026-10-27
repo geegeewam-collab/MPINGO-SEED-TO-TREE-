@@ -6,10 +6,13 @@ import type { FormState } from '@/app/actions/public';
 import { Field, inputClass } from '@/components/forms/Field';
 import { MriLogo } from '@/components/brand/Logo';
 import { brand } from '@/lib/brand';
+import { PrototypeNotice } from '@/components/layout/PrototypeNotice';
 
 export default function LoginPage() {
   const [state, action, pending] = useActionState<FormState, FormData>(signIn, { status: 'idle' });
   return (
+    <>
+    <PrototypeNotice />
     <div className="grid min-h-screen lg:grid-cols-2">
       <aside className="hidden bg-primary-deep p-12 text-white lg:flex lg:flex-col lg:justify-between">
         <Link href="/" className="text-sm font-medium text-white/80 hover:text-white">{brand.name}</Link>
@@ -37,5 +40,6 @@ export default function LoginPage() {
         </div>
       </main>
     </div>
+    </>
   );
 }

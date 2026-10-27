@@ -2,8 +2,8 @@
 import { useEffect, useRef } from 'react';
 import 'leaflet/dist/leaflet.css';
 
-export interface MapSite { id: string; name: string; lat: number; lng: number; state: 'good' | 'poor' | 'unchecked'; detail: string }
-const COLOUR = { good: '#287A4B', poor: '#B44343', unchecked: '#C3A36A' };
+export interface MapSite { id: string; name: string; lat: number; lng: number; state: 'good' | 'poor' | 'partial' | 'unchecked'; detail: string[] }
+const COLOUR = { good: '#287A4B', poor: '#B44343', partial: '#6B7F8F', unchecked: '#C3A36A' };
 
 export function SitesMap({ sites }: { sites: MapSite[] }) {
   const el = useRef<HTMLDivElement>(null);
@@ -18,9 +18,9 @@ export function SitesMap({ sites }: { sites: MapSite[] }) {
       for (const s of sites) {
         const box = document.createElement('div');
         const title = document.createElement('strong'); title.textContent = s.name;
-        const text = document.createElement('div'); text.textContent = s.detail;
+        const lines = s.detail.map((d) => { const line = document.createElement('div'); line.textContent = d; return line; });
         const link = document.createElement('a'); link.href = `/restoration/sites/${s.id}`; link.textContent = 'Open site';
-        box.append(title, text, link);
+        box.append(title, ...lines, link);
         L.circleMarker([s.lat, s.lng], { radius: 9, color: '#ffffff', weight: 2, fillColor: COLOUR[s.state], fillOpacity: 0.9 }).bindPopup(box).addTo(map);
         points.push([s.lat, s.lng]);
       }

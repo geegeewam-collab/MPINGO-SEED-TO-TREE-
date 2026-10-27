@@ -5,6 +5,7 @@ import { MriBadge } from '@/components/brand/Logo';
 import { brand, whatsappLink } from '@/lib/brand';
 import { copy, type Lang } from '@/lib/i18n';
 import { setLang, useLang } from './useLang';
+import { PrototypeNotice } from './PrototypeNotice';
 
 const primary = 'inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90';
 const outlined = 'inline-flex items-center justify-center rounded-lg border border-primary px-4 py-2 text-sm font-semibold text-primary hover:bg-accent';
@@ -88,6 +89,7 @@ export function PublicFooter({ lang: initial }: { lang?: Lang }) {
 export function PublicShell({ lang, mobileBar = true, children }: { lang?: Lang; mobileBar?: boolean; children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-background">
+      <PrototypeNotice />
       <PublicHeader lang={lang} />
       {children}
       <PublicFooter lang={lang} />
